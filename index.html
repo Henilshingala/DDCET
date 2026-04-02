@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DDCET 2026 — Complete Exam Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style id="quiz-styles">
+/* ═══════════════════════════════════════════════════════
+   QUIZ MODULE STYLES — scoped to #testKnowledgeSection
+   ═══════════════════════════════════════════════════════ */
+
+#testKnowledgeSection {
+  --qz-bg: #f5f7fb;
+  --qz-card: #ffffff;
+  --qz-text: #1f2937;
+  --qz-muted: #6b7280;
+  --qz-primary: #0f766e;
+  --qz-primary-dark: #0b5f58;
+  --qz-border: #dbe2ea;
+  --qz-danger: #b42318;
+  --qz-danger-dark: #8e1c14;
+  --qz-green: #16a34a;
+  --qz-green-bg: #f0fdf4;
+  --qz-green-border: #86efac;
+  --qz-red-bg: #fef2f2;
+  --qz-red-border: #fca5a5;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: var(--qz-text);
+  padding: 20px 0;
+}
+
+#testKnowledgeSection .quiz-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+#testKnowledgeSection .quiz-header { margin-bottom: 16px; }
+#testKnowledgeSection .quiz-header h2 { font-size: 24px; margin-bottom: 4px; color: #e2e8f0; }
+#testKnowledgeSection .quiz-header .subtitle { color: #94a3b8; font-size: 14px; }
+
+/* Cards */
+#testKnowledgeSection .qz-card {
+  background: var(--qz-card);
+  border: 1px solid var(--qz-border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(17,24,39,0.06);
+  margin-bottom: 16px;
+}
+#testKnowledgeSection .qz-card h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: var(--qz-text);
+}
+
+#testKnowledgeSection .qz-hidden { display: none !important; }
+
+/* Row */
+#testKnowledgeSection .qz-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+/* Buttons */
+#testKnowledgeSection .qz-btn {
+  border: 1px solid transparent;
+  background: var(--qz-primary);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+}
+#testKnowledgeSection .qz-btn:hover { background: var(--qz-primary-dark); }
+#testKnowledgeSection .qz-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#testKnowledgeSection .qz-btn.secondary {
+  background: #fff;
+  color: var(--qz-text);
+  border-color: var(--qz-border);
+}
+#testKnowledgeSection .qz-btn.secondary:hover { border-color: #9dafc4; background: #f9fafb; }
+#testKnowledgeSection .qz-btn.danger { background: var(--qz-danger); }
+#testKnowledgeSection .qz-btn.danger:hover { background: var(--qz-danger-dark); }
+#testKnowledgeSection .qz-btn.save-score {
+  background: #f59e0b;
+  color: #000;
+  font-weight: 700;
+  margin-top: 8px;
+}
+#testKnowledgeSection .qz-btn.save-score:hover { background: #d97706; }
+
+/* Progress */
+#testKnowledgeSection .progress-wrap {
+  height: 5px; background: #e5e7eb; border-radius: 6px;
+  margin-bottom: 14px; overflow: hidden;
+}
+#testKnowledgeSection .progress-fill {
+  height: 100%; background: var(--qz-primary); border-radius: 6px;
+  transition: width 0.4s ease; width: 0%;
+}
+
+/* Meta grid */
+#testKnowledgeSection .meta-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 10px; margin-bottom: 14px;
+}
+#testKnowledgeSection .meta-cell {
+  background: #f8fafc; border: 1px solid var(--qz-border);
+  border-radius: 10px; padding: 8px 10px;
+}
+#testKnowledgeSection .meta-cell .lbl {
+  display: block; font-size: 11px; color: var(--qz-muted);
+  text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px;
+}
+#testKnowledgeSection .meta-cell .val { font-size: 18px; font-weight: 700; }
+#testKnowledgeSection #scoreValue { color: var(--qz-primary); }
+
+/* Question */
+#testKnowledgeSection #questionText {
+  font-size: 16px; font-weight: 500; line-height: 1.65;
+  margin-bottom: 16px; color: var(--qz-text);
+}
+
+/* Options */
+#testKnowledgeSection .options { display: grid; gap: 10px; margin-bottom: 18px; }
+#testKnowledgeSection .option-item {
+  border: 2px solid var(--qz-border); border-radius: 10px;
+  padding: 11px 14px; display: flex; gap: 10px; align-items: center;
+  cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;
+}
+#testKnowledgeSection .option-item input[type="radio"] {
+  accent-color: var(--qz-primary); width: 16px; height: 16px; flex-shrink: 0; cursor: pointer;
+}
+#testKnowledgeSection .option-item:hover:not(.locked) {
+  border-color: var(--qz-primary); background: #f0fdfa;
+}
+#testKnowledgeSection .option-item.selected {
+  border-color: var(--qz-primary); background: #f0fdfa;
+}
+#testKnowledgeSection .option-item.locked { cursor: default; }
+#testKnowledgeSection .option-item.is-correct-chosen {
+  border-color: var(--qz-green) !important; background: var(--qz-green-bg) !important;
+}
+#testKnowledgeSection .option-item.is-wrong-chosen {
+  border-color: #dc2626 !important; background: var(--qz-red-bg) !important;
+}
+#testKnowledgeSection .option-item.is-right-answer {
+  border-color: var(--qz-green) !important; background: var(--qz-green-bg) !important;
+}
+#testKnowledgeSection .option-key {
+  font-size: 12px; font-weight: 700; color: var(--qz-muted); min-width: 20px; flex-shrink: 0;
+}
+#testKnowledgeSection .option-text { font-size: 14px; line-height: 1.5; }
+
+/* Feedback */
+#testKnowledgeSection #feedbackBanner {
+  padding: 10px 14px; border-radius: 10px; font-size: 14px;
+  font-weight: 500; margin-bottom: 14px; display: none;
+}
+#testKnowledgeSection #feedbackBanner.correct {
+  display: block; background: var(--qz-green-bg);
+  border: 1px solid var(--qz-green-border); color: #166534;
+}
+#testKnowledgeSection #feedbackBanner.wrong {
+  display: block; background: var(--qz-red-bg);
+  border: 1px solid var(--qz-red-border); color: #991b1b;
+}
+#testKnowledgeSection #feedbackBanner.skipped {
+  display: block; background: #fffbeb; border: 1px solid #fcd34d; color: #92400e;
+}
+
+/* Nav row */
+#testKnowledgeSection .nav-row {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+}
+#testKnowledgeSection .nav-left { display: flex; gap: 10px; }
+#testKnowledgeSection .nav-right { display: flex; gap: 10px; }
+#testKnowledgeSection #smallNote { color: var(--qz-muted); font-size: 13px; margin-top: 10px; min-height: 16px; }
+
+/* Test size grid */
+#testKnowledgeSection .test-size-grid {
+  display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin: 14px 0 10px;
+}
+#testKnowledgeSection .size-btn {
+  padding: 14px 8px; background: #fff; border: 2px solid var(--qz-border);
+  border-radius: 12px; cursor: pointer; text-align: center; font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+#testKnowledgeSection .size-btn:hover {
+  border-color: var(--qz-primary); background: #f0fdfa;
+  box-shadow: 0 2px 8px rgba(15,118,110,0.15);
+}
+#testKnowledgeSection .size-num { display: block; font-size: 20px; font-weight: 700; color: var(--qz-primary); line-height: 1; }
+#testKnowledgeSection .size-lbl { display: block; font-size: 11px; color: var(--qz-muted); margin-top: 3px; }
+
+/* Subject cards */
+#testKnowledgeSection .subject-cards {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 10px; margin: 14px 0 10px;
+}
+#testKnowledgeSection .subject-card {
+  border: 2px solid var(--qz-border); border-radius: 12px; padding: 14px 12px;
+  text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  background: #fff; user-select: none;
+}
+#testKnowledgeSection .subject-card:hover { box-shadow: 0 2px 10px rgba(15,118,110,0.15); }
+#testKnowledgeSection .subject-card.active { border-color: var(--qz-primary); background: #f0fdfa; }
+#testKnowledgeSection .subject-card .sc-icon { font-size: 24px; margin-bottom: 4px; }
+#testKnowledgeSection .subject-card .sc-name { display: block; font-size: 14px; font-weight: 600; }
+#testKnowledgeSection .subject-card .sc-count { display: block; font-size: 11px; color: var(--qz-muted); margin-top: 3px; }
+
+/* Subject/subtopic grid */
+#testKnowledgeSection .subject-grid {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap: 10px; margin: 14px 0 10px; max-height: 350px; overflow-y: auto;
+  padding: 10px; border: 1px solid var(--qz-border); border-radius: 10px; background: #f8fafc;
+}
+#testKnowledgeSection .subject-item {
+  display: flex; align-items: center; gap: 10px; font-size: 13px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--qz-border); background: #fff;
+  transition: border-color 0.15s, background 0.15s;
+}
+#testKnowledgeSection .subject-item:hover { border-color: var(--qz-primary); background: #f0fdfa; }
+#testKnowledgeSection .subj-checkbox { accent-color: var(--qz-primary); width: 16px; height: 16px; cursor: pointer; }
+#testKnowledgeSection .subtopic-section-label {
+  font-size: 13px; font-weight: 600; color: var(--qz-muted);
+  margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Result grid */
+#testKnowledgeSection .result-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px;
+}
+#testKnowledgeSection .result-cell {
+  border-radius: 10px; padding: 12px 10px; text-align: center;
+  border: 1px solid var(--qz-border); background: #f8fafc;
+}
+#testKnowledgeSection .result-cell .rc-num { font-size: 26px; font-weight: 700; }
+#testKnowledgeSection .result-cell .rc-lbl { font-size: 11px; color: var(--qz-muted); margin-top: 2px; text-transform: uppercase; }
+#testKnowledgeSection .result-cell.score-cell .rc-num { color: var(--qz-primary); }
+#testKnowledgeSection .result-cell.ok-cell .rc-num { color: var(--qz-green); }
+#testKnowledgeSection .result-cell.bad-cell .rc-num { color: #dc2626; }
+
+/* Wrong review */
+#testKnowledgeSection .review-header {
+  font-size: 15px; font-weight: 600; color: #991b1b; margin-bottom: 12px; padding-top: 4px;
+}
+#testKnowledgeSection .review-item {
+  border: 1px solid var(--qz-border); border-radius: 10px;
+  padding: 14px; margin-bottom: 10px; background: #fff;
+}
+#testKnowledgeSection .review-q { font-size: 14px; font-weight: 500; line-height: 1.55; margin-bottom: 8px; }
+#testKnowledgeSection .review-your-ans {
+  font-size: 13px; color: #dc2626; background: var(--qz-red-bg);
+  border: 1px solid var(--qz-red-border); border-radius: 6px; padding: 6px 10px; margin-bottom: 6px;
+}
+#testKnowledgeSection .review-correct-ans {
+  font-size: 13px; color: #166534; background: var(--qz-green-bg);
+  border: 1px solid var(--qz-green-border); border-radius: 6px; padding: 6px 10px;
+}
+#testKnowledgeSection .no-wrong-msg {
+  color: var(--qz-green); font-size: 14px; font-weight: 500; padding: 10px 0 4px;
+}
+
+#testKnowledgeSection .hint { color: var(--qz-muted); font-size: 13px; line-height: 1.6; }
+
+@media (max-width: 680px) {
+  #testKnowledgeSection .meta-grid,
+  #testKnowledgeSection .result-grid { grid-template-columns: repeat(2,1fr); }
+  #testKnowledgeSection .test-size-grid { grid-template-columns: repeat(3,1fr); }
+  #testKnowledgeSection .nav-row { flex-direction: column; gap: 8px; }
+  #testKnowledgeSection .nav-left,
+  #testKnowledgeSection .nav-right { width: 100%; }
+  #testKnowledgeSection .qz-btn { flex: 1; text-align: center; }
+}
+@media (max-width: 400px) {
+  #testKnowledgeSection .test-size-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+  </style>
+  <style>
+    /* ── Global Reset ── */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#07090f;font-family:'IBM Plex Sans',sans-serif;color:#e2e8f0;min-height:100vh}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-thumb{background:#f59e0b44;border-radius:4px}
+    input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none}
+    input[type=number]{-moz-appearance:textfield}
+    label{cursor:pointer}
+
+    /* ── Top Navigation Bar ── */
+    .main-nav {
+      background: #0d1117;
+      border-bottom: 2px solid #1e293b;
+      padding: 0 24px;
+      display: flex;
+      gap: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .main-nav .nav-btn {
+      padding: 14px 24px;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      color: #475569;
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: color 0.2s, border-color 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .main-nav .nav-btn:hover { color: #94a3b8; }
+    .main-nav .nav-btn.active {
+      color: #f59e0b;
+      border-bottom-color: #f59e0b;
+    }
+    .main-nav .nav-brand {
+      display: flex;
+      align-items: center;
+      margin-right: auto;
+      padding: 10px 0;
+    }
+    .main-nav .nav-brand span {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f59e0b;
+      letter-spacing: 1px;
+    }
+
+    /* ── Section visibility ── */
+    .app-section { display: none; }
+    .app-section.visible { display: block; }
+
+    /* ── Mock Test Table Section ── */
+    #mockTestSection {
+      padding: 20px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    #mockTestSection h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 16px;
+    }
+    .mock-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .mock-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: #475569;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #1e293b;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .mock-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #0f172a;
+      color: #cbd5e1;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .mock-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .mock-empty {
+      text-align: center;
+      color: #475569;
+      padding: 40px 20px;
+      font-size: 14px;
+      background: #0d1117;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+    }
+    .accuracy-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .clear-mock-btn {
+      background: transparent;
+      color: #64748b;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 12px;
+      font-family: inherit;
+    }
+    .clear-mock-btn:hover { border-color: #ef4444; color: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ TOP NAVIGATION ═══ -->
+  <nav class="main-nav">
+    <div class="nav-brand"><span>📚 DDCET 2026</span></div>
+    <button class="nav-btn active" onclick="showSection('dashboard')">📊 Dashboard</button>
+    <button class="nav-btn" onclick="showSection('testKnowledge')">📝 Test Knowledge</button>
+  </nav>
+
+  <!-- ═══ SECTION 1: DASHBOARD (Study Tracker) ═══ -->
+  <section id="dashboardSection" class="app-section visible">
+    <div id="root"></div>
+  </section>
+
+  <!-- ═══ SECTION 2: TEST KNOWLEDGE (Quiz) ═══ -->
+  <section id="testKnowledgeSection" class="app-section">
+    <div class="quiz-wrap">
+      <header class="quiz-header">
+        <h2>DDCET Quiz Test</h2>
+        <p class="subtitle">Practice from your question bank · Resume supported · Wrong answers appear in future quizzes</p>
+      </header>
+
+      <!-- LOADER -->
+      <section id="loaderCard" class="qz-card">
+        <h2>Upload MCQ Bank</h2>
+        <p id="loadStatus">Upload your generated CSV file to begin.</p>
+        <div class="qz-row">
+          <button id="pickFileBtn" class="qz-btn secondary">Choose CSV File</button>
+          <input id="csvFileInput" type="file" accept=".csv" hidden />
+        </div>
+        <p class="hint" style="margin-top:12px">
+          Required columns: <code>Subject, Subtopic, Q_No, Difficulty, Question, Option_A, Option_B, Option_C, Option_D, Answer</code>
+        </p>
+      </section>
+
+      <!-- START -->
+      <section id="startCard" class="qz-card qz-hidden">
+        <h2>Start Test</h2>
+        <p class="hint">Pick how many random questions you want in this test.</p>
+        <div class="test-size-grid">
+          <button class="size-btn" data-sz="10"><span class="size-num">10</span><span class="size-lbl">Quick</span></button>
+          <button class="size-btn" data-sz="50"><span class="size-num">50</span><span class="size-lbl">Practice</span></button>
+          <button class="size-btn" data-sz="100"><span class="size-num">100</span><span class="size-lbl">Standard</span></button>
+          <button class="size-btn" data-sz="200"><span class="size-num">200</span><span class="size-lbl">Extended</span></button>
+          <button class="size-btn" data-sz="full"><span class="size-num">All</span><span class="size-lbl">Full Test</span></button>
+        </div>
+        <p id="availableInfo" class="hint"></p>
+        <div id="resumeRow" class="qz-row qz-hidden"></div>
+        <p class="hint" style="margin-top:10px">
+          ✓ Scoring: Correct <strong>+2</strong> · Wrong <strong>−0.5</strong> · Skipped <strong>0</strong><br>
+          ✓ Wrong answers will appear in your <em>next</em> quiz session, not this one.
+        </p>
+      </section>
+
+      <!-- SUBJECT CARD -->
+      <section id="subjectCard" class="qz-card qz-hidden">
+        <h2>Select Subjects & Topics</h2>
+        <p class="hint">Choose subjects for your <strong id="chosenSizeDisplay"></strong> question test, then fine-tune subtopics below.</p>
+        <h3 style="font-size:14px;margin-top:10px;margin-bottom:4px;color:#e2e8f0">Subjects</h3>
+        <div id="subjectCardsContainer" class="subject-cards"></div>
+        <h3 style="font-size:14px;margin-top:14px;margin-bottom:0;color:#e2e8f0">Subtopics</h3>
+        <div class="qz-row" style="margin-bottom:5px;">
+          <button id="selectAllSubjBtn" class="qz-btn secondary">Select All</button>
+          <button id="clearAllSubjBtn" class="qz-btn secondary">Clear All</button>
+        </div>
+        <div id="subjectContainer" class="subject-grid"></div>
+        <div class="qz-row" style="margin-top:14px;">
+          <button id="startQuizFinalBtn" class="qz-btn">Start Quiz</button>
+          <button id="backToStartBtn" class="qz-btn secondary">← Back</button>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section id="quizCard" class="qz-card qz-hidden">
+        <div class="meta-grid">
+          <div class="meta-cell"><span class="lbl">Question</span><span class="val" id="questionNumber">—</span></div>
+          <div class="meta-cell"><span class="lbl">Score</span><span class="val" id="scoreValue">0</span></div>
+          <div class="meta-cell"><span class="lbl">Answered</span><span class="val" id="answeredValue">0</span></div>
+          <div class="meta-cell"><span class="lbl">Left</span><span class="val" id="leftValue">0</span></div>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+        <p id="questionText"></p>
+        <div id="optionsContainer" class="options"></div>
+        <div id="feedbackBanner"></div>
+        <div class="nav-row">
+          <div class="nav-left">
+            <button id="prevBtn" class="qz-btn secondary" type="button">← Prev</button>
+            <button id="nextBtn" class="qz-btn" type="button">Save & Next</button>
+          </div>
+          <div class="nav-right">
+            <button id="submitBtn" class="qz-btn danger" type="button">Submit Test</button>
+          </div>
+        </div>
+        <p id="smallNote"></p>
+      </section>
+
+      <!-- RESULT -->
+      <section id="resultCard" class="qz-card qz-hidden">
+        <h2>Test Completed</h2>
+        <div class="result-grid">
+          <div class="result-cell score-cell"><div class="rc-num" id="finalScore">0</div><div class="rc-lbl">Score</div></div>
+          <div class="result-cell ok-cell"><div class="rc-num" id="finalCorrect">0</div><div class="rc-lbl">✓ Correct</div></div>
+          <div class="result-cell bad-cell"><div class="rc-num" id="finalWrong">0</div><div class="rc-lbl">✗ Wrong</div></div>
+          <div class="result-cell"><div class="rc-num" id="finalSkipped">0</div><div class="rc-lbl">— Skipped</div></div>
+        </div>
+        <div id="wrongReview"></div>
+        <div class="qz-row">
+          <button id="saveScoreBtn" class="qz-btn save-score" type="button">💾 Save to Mock Tests</button>
+          <button id="newTestBtn" class="qz-btn" type="button">Start New Test</button>
+          <button id="clearProgressBtn" class="qz-btn secondary" type="button">Clear All Progress</button>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ═══ NAVIGATION JS ═══ -->
+  <script>
+    function showSection(name) {
+      document.querySelectorAll('.app-section').forEach(s => s.classList.remove('visible'));
+      document.querySelectorAll('.main-nav .nav-btn').forEach(b => b.classList.remove('active'));
+
+      const sectionMap = {
+        'dashboard': 'dashboardSection',
+        'testKnowledge': 'testKnowledgeSection'
+      };
+
+      const section = document.getElementById(sectionMap[name]);
+      if (section) section.classList.add('visible');
+
+      // Highlight nav button
+      const btns = document.querySelectorAll('.main-nav .nav-btn');
+      const idx = {'dashboard':0,'testKnowledge':1}[name];
+      if (btns[idx]) btns[idx].classList.add('active');
+    }
+  </script>
+
+  <!-- ═══ STUDY TRACKER (React/Babel) ═══ -->
+  <script type="text/babel">
+
+const { useState, useEffect, useMemo } = React;
+
+/* ── SYLLABUS ── */
+const SYLLABUS = [
+  {id:"units",  name:"Units & Measurement",            marks:12, paper:"BE-01", group:"Physics"},
+  {id:"mech",   name:"Classical Mechanics",             marks:12, paper:"BE-01", group:"Physics"},
+  {id:"elec",   name:"Electric Current",                marks:12, paper:"BE-01", group:"Physics"},
+  {id:"heat",   name:"Heat & Thermometry",              marks:12, paper:"BE-01", group:"Physics"},
+  {id:"waves",  name:"Wave Motion, Optics & Acoustics", marks:12, paper:"BE-01", group:"Physics"},
+  {id:"chem1",  name:"Chemical Reactions & Equations",  marks:6,  paper:"BE-01", group:"Chemistry"},
+  {id:"chem2",  name:"Acids, Bases & Salts",            marks:8,  paper:"BE-01", group:"Chemistry"},
+  {id:"chem3",  name:"Metals & Non-metals",             marks:6,  paper:"BE-01", group:"Chemistry"},
+  {id:"comp",   name:"Computer Practice",               marks:10, paper:"BE-01", group:"Other"},
+  {id:"env",    name:"Environmental Sciences",          marks:10, paper:"BE-01", group:"Other"},
+  {id:"matrix", name:"Determinant & Matrices",          marks:8,  paper:"BE-02", group:"Math"},
+  {id:"trig",   name:"Trigonometry",                    marks:6,  paper:"BE-02", group:"Math"},
+  {id:"vec",    name:"Vectors",                         marks:4,  paper:"BE-02", group:"Math"},
+  {id:"coord",  name:"Coordinate Geometry",             marks:4,  paper:"BE-02", group:"Math"},
+  {id:"flim",   name:"Function & Limit",                marks:6,  paper:"BE-02", group:"Math"},
+  {id:"diff",   name:"Differentiation & Applications",  marks:8,  paper:"BE-02", group:"Math"},
+  {id:"integ",  name:"Integration",                     marks:8,  paper:"BE-02", group:"Math"},
+  {id:"log",    name:"Logarithm & Statistics",          marks:6,  paper:"BE-02", group:"Math"},
+  {id:"comp2",  name:"Comprehension",                   marks:10, paper:"BE-02", group:"English"},
+  {id:"comm",   name:"Theory of Communication",         marks:10, paper:"BE-02", group:"English"},
+  {id:"writ",   name:"Techniques of Writing",           marks:10, paper:"BE-02", group:"English"},
+  {id:"gram",   name:"Grammar",                         marks:10, paper:"BE-02", group:"English"},
+  {id:"corr",   name:"Word & Sentence Correction",      marks:10, paper:"BE-02", group:"English"},
+];
+
+/* ── 30-DAY SCHEDULE (Mon–Sat, Mar 23 → Apr 25) ── */
+const SCHEDULE = [
+  // WEEK 1 — Mar 23–28
+  {day:1,  date:"23 Mar", math:"Determinant & Matrices — matrix types, addition, scalar multiplication, product",  sci:"Units & Measurement — physical quantities, SI units, CGS units, interconversion",         oth:"Environmental Sciences — ecosystem, food chain, types of pollution"},
+  {day:2,  date:"24 Mar", math:"Determinant & Matrices — determinant values (up to 3rd order), cofactors",         sci:"Units & Measurement — errors, estimation, relative error, percentage error, propagation",  oth:"Environmental Sciences — climate change, renewable energy (solar, wind, hydro, bio, tidal)"},
+  {day:3,  date:"25 Mar", math:"Determinant & Matrices — adjoint, inverse of 2×2, singular/non-singular",          sci:"Units & Measurement — Vernier caliper (least count, reading), micrometer screw gauge",      oth:"Computer Practice — basics of computer system, input/output devices, CPU"},
+  {day:4,  date:"26 Mar", math:"Determinant & Matrices — simultaneous linear equations (2 variables), full MCQ set",sci:"Classical Mechanics — linear motion, velocity, acceleration, equations of motion",          oth:"Computer Practice — Internet basics, HTML (tags, structure), MS Word"},
+  {day:5,  date:"27 Mar", math:"Trigonometry — degree/radian conversion, all trig functions, standard values",     sci:"Classical Mechanics — force, Newton's 3 laws of motion, applications",                      oth:"Computer Practice — MS Excel (formulas, cells), MS PowerPoint (slides, layouts)"},
+  {day:6,  date:"28 Mar", math:"Trigonometry — allied angles, compound angles (sin/cos/tan A±B)",                  sci:"Classical Mechanics — linear momentum, impulse of force (J = Ft = ΔP)",                    oth:"Chemical Reactions — writing and balancing chemical equations"},
+  // WEEK 2 — Mar 30–Apr 4
+  {day:7,  date:"30 Mar", math:"Trigonometry — multiple/sub-multiple angles, sum-to-product formulas, MCQ set",   sci:"Classical Mechanics — circular motion, angular velocity, angular acceleration",             oth:"Chemical Reactions — combination, decomposition, displacement, double displacement"},
+  {day:8,  date:"31 Mar", math:"Function & Limit — definition, types of functions, simple examples",              sci:"Classical Mechanics — centripetal and centrifugal force, Work-Energy theorem",               oth:"Acids, Bases & Salts — chemical properties of acids and bases, reactions"},
+  {day:9,  date:"1 Apr",  math:"Function & Limit — limit of a function, standard limit formulas",                 sci:"Classical Mechanics — KE = ½mv², PE = mgh, conservation of energy, power",                  oth:"Acids, Bases & Salts — metallic oxides with acids, pH scale, everyday importance"},
+  {day:10, date:"2 Apr",  math:"Differentiation — concept, first principles, sum/difference/product/quotient rules",sci:"Electric Current — Ohm's law (V=IR), applications, resistivity ρ, conductivity",          oth:"Acids, Bases & Salts — salts, family of salts, pH of salts"},
+  {day:11, date:"3 Apr",  math:"Differentiation — chain rule, implicit functions, parametric functions",           sci:"Electric Current — charge, Coulomb's law (F=kq₁q₂/r²), electric field E=F/q",              oth:"Metals & Non-metals — physical properties, chemical properties, reactivity series"},
+  {day:12, date:"4 Apr",  math:"Differentiation — logarithmic differentiation, successive differentiation (2nd order)",sci:"Electric Current — electric potential, potential difference, electric flux, current",   oth:"Metals & Non-metals — reaction with oxygen/water/acids, ionic compounds, corrosion"},
+  // WEEK 3 — Apr 6–11
+  {day:13, date:"6 Apr",  math:"Differentiation — velocity & acceleration applications, full MCQ practice set",   sci:"Electric Current — resistance, series combination (R=R₁+R₂+…), parallel (1/R=1/R₁+…)",     oth:"Grammar — 8 parts of speech with examples, tenses (all 12 tenses)"},
+  {day:14, date:"7 Apr",  math:"Integration — concept, indefinite integrals, standard integral formulas",          sci:"Electric Current — conductance, capacitance, parallel plate capacitor (C=ε₀A/d)",         oth:"Grammar — subject-verb agreement rules, common MCQ traps"},
+  {day:15, date:"8 Apr",  math:"Integration — substitution method, integration by parts",                         sci:"Electric Current — series capacitor (1/C=…), parallel capacitor (C=C₁+C₂+…), MCQ set",   oth:"Theory of Communication — process, verbal vs non-verbal, formal vs informal"},
+  {day:16, date:"9 Apr",  math:"Integration — definite integrals, properties, full MCQ practice set",             sci:"Heat & Thermometry — conduction, convection, radiation (modes of heat transfer)",           oth:"Theory of Communication — barriers to communication, MCQ practice"},
+  {day:17, date:"10 Apr", math:"Vectors — scalars vs vectors, types, triangle/parallelogram law of addition",     sci:"Heat & Thermometry — temperature scales: Kelvin, Celsius, Fahrenheit — all conversion formulas", oth:"Techniques of Writing — parts of a letter/email, types of business letters"},
+  {day:18, date:"11 Apr", math:"Vectors — dot product (A·B=ABcosθ), cross product (|A×B|=ABsinθ), angle",       sci:"Heat & Thermometry — heat capacity (Q=mcΔT), specific heat, calorimetry",                   oth:"Techniques of Writing — inquiry, reply, order, complaint, adjustment letters"},
+  // WEEK 4 — Apr 13–18
+  {day:19, date:"13 Apr", math:"Coordinate Geometry — slope, equation of line (5 forms), parallel/perpendicular", sci:"Heat & Thermometry — thermal conductivity (Q/t = kA·ΔT/L), coeff of thermal conductivity", oth:"Comprehension — read 3 unseen passages, answer 5 Qs each, time yourself"},
+  {day:20, date:"14 Apr", math:"Coordinate Geometry — angle between lines, circle equation, centre/radius",        sci:"Heat & Thermometry — linear thermal expansion (ΔL = αL₀ΔT), applications",                  oth:"Word & Sentence Correction — common spelling mistakes, sentence structure errors"},
+  {day:21, date:"15 Apr", math:"Logarithm & Statistics — log laws (all 5), change of base, simple examples",     sci:"Wave Motion & Optics — types of waves: progressive, stationary, mechanical, non-mechanical, transverse, longitudinal", oth:"Word & Sentence Correction — full MCQ practice set (20 questions)"},
+  {day:22, date:"16 Apr", math:"Logarithm & Statistics — mean, median, mode (ungrouped data), MCQ set",           sci:"Wave Motion & Optics — frequency (f), wavelength (λ), time period (T), relations (v=fλ, f=1/T)", oth:"Common Abbreviations — business letter abbreviations MCQ practice"},
+  // REVISION WEEK — Apr 17–22
+  {day:23, date:"17 Apr", math:"REVISION — Matrices + Trigonometry: all formulas on one sheet + 20 MCQs timed", sci:"REVISION — Units & Measurement + Classical Mechanics: all formulas + 20 MCQs timed",      oth:"REVISION — Environmental Sciences + Computer Practice (full notes skim)"},
+  {day:24, date:"18 Apr", math:"REVISION — Function/Limit + Differentiation: all rules written from memory",     sci:"REVISION — Electric Current: draw all circuit diagrams, write all formulas, 20 MCQs",        oth:"REVISION — All 3 Chemistry chapters: reactions, acids, metals (formula card)"},
+  {day:25, date:"19 Apr", math:"REVISION — Integration + Vectors + Coordinate Geometry: all formulas + MCQs",   sci:"REVISION — Heat & Thermometry + Wave Motion & Optics: all formulas + 20 MCQs",             oth:"REVISION — Grammar + Communication + Techniques of Writing (key rules)"},
+  // MOCK WEEK — Apr 20–25
+  {day:26, date:"20 Apr", math:"MOCK TEST — Full Math (50 MCQs, strict 75 min timer, real exam conditions)",     sci:"MOCK TEST — Full Science (50 MCQs, strict 75 min timer, real exam conditions)",              oth:"Post-mock analysis — list every wrong answer, identify weak topics"},
+  {day:27, date:"21 Apr", math:"WEAK AREA REVISION — every math topic where you scored below 60% in mock",       sci:"WEAK AREA REVISION — every science topic where you scored below 60% in mock",               oth:"WEAK AREA REVISION — English topics where you made mistakes"},
+  {day:28, date:"22 Apr", math:"MOCK TEST 2 — Full paper, strictly timed (practice skipping strategy)",          sci:"MOCK TEST 2 — Full paper, strictly timed (attempt only 70%+ confident Qs)",                  oth:"Post-mock 2 analysis — compare score vs Mock 1, track improvement"},
+  {day:29, date:"23 Apr", math:"FORMULA SHEET — Write all math formulas from memory without looking",            sci:"FORMULA SHEET — Write all physics & chemistry formulas from memory without looking",         oth:"Key English rules: grammar shortcuts, letter format checklist, common errors"},
+  {day:30, date:"24 Apr", math:"FINAL LIGHT REVISION — formula sheets only, skim weak topics only",              sci:"FINAL LIGHT REVISION — formula sheets only, skim weak topics only",                        oth:"Sleep by 10 PM. Exam Apr 26. You have prepared. Trust the work."},
+];
+
+/* ── INITIAL MOCK DATA (empty — users add their own) ── */
+const INITIAL_MOCKS = [];
+
+const SUB_SUBJECTS = [
+  {key:"phy",  label:"Physics",     max:60},
+  {key:"math", label:"Math",        max:50},
+  {key:"eng",  label:"English",     max:50},
+  {key:"chem", label:"Chemistry",   max:20},
+  {key:"comp", label:"Computer",    max:10},
+  {key:"env",  label:"Environment", max:10},
+];
+
+/* ── STORAGE ── */
+const KEY = "ddcet26v2";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)||"{}"); } catch { return {}; } };
+const save = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+
+/* ── HELPERS ── */
+const parseDate = str => {
+  if (!str) return null;
+  const p = str.split("/");
+  if (p.length === 3) { const d = new Date(`${p[2]}-${p[1].padStart(2,"0")}-${p[0].padStart(2,"0")}`); return isNaN(d)?null:d; }
+  const [day,mon] = str.split(" ");
+  const m = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  return m[mon]!==undefined ? new Date(2026,m[mon],parseInt(day)) : null;
+};
+const getTodayIdx = () => {
+  const t = new Date(); const td = new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  return SCHEDULE.findIndex(d => { const sd=parseDate(d.date); return sd&&sd.getTime()===td.getTime(); });
+};
+const getDaysLeft = () => Math.max(0, Math.ceil((new Date(2026,3,26)-new Date())/86400000));
+const scoreColor = s => s>=175?"#22c55e":s>=155?"#3b82f6":s>=130?"#f59e0b":"#ef4444";
+const confColor  = v => v>=4?"#22c55e":v>=3?"#f59e0b":"#ef4444";
+const sortMocks  = arr => [...arr].sort((a,b) => { const da=parseDate(a.date),db=parseDate(b.date); if(!da&&!db)return 0; if(!da)return 1; if(!db)return -1; return db-da; });
+
+/* ── STYLES ── */
+const C = {
+  card:  {background:"#0d1117",border:"1px solid #1e293b",borderRadius:12,padding:16},
+  label: {fontSize:11,color:"#64748b",marginBottom:5},
+  input: {width:"100%",padding:"9px 12px",borderRadius:8,border:"1px solid #1e293b",background:"#07090f",color:"#e2e8f0",fontSize:13,outline:"none"},
+  btn:   {background:"#f59e0b",color:"#000",border:"none",borderRadius:8,padding:"9px 20px",fontSize:13,fontWeight:700,cursor:"pointer"},
+  ghost: {background:"transparent",color:"#64748b",border:"1px solid #1e293b",borderRadius:8,padding:"9px 20px",fontSize:13,cursor:"pointer"},
+  bar:   {background:"#1e293b",borderRadius:99,height:7,overflow:"hidden",position:"relative"},
+  mono:  {fontFamily:"IBM Plex Mono, monospace"},
+};
+const fill = (w,col) => ({height:"100%",width:w,background:col,borderRadius:99,transition:"width .3s"});
+
+/* ── APP ── */
+function App() {
+  const stored = load();
+  const [tab,       setTab]    = useState("today");
+  const [checks,    setChecks] = useState(stored.checks  || {});
+  const [conf,      setConf]   = useState(stored.conf    || {});
+  const [mocks,     setMocks]  = useState(() => stored.mocks?.length ? stored.mocks : INITIAL_MOCKS);
+  const [showForm,  setShowF]  = useState(false);
+  const [mockMode,  setMMode]  = useState("total"); // "total" | "subject"
+  const [form,      setForm]   = useState({name:"",date:"",total:"",max:"200",correct:"",wrong:"",skip:"",subs:{}});
+  const [daysLeft,  setDL]     = useState(getDaysLeft());
+
+  /* ── prediction ── */
+  const prediction = useMemo(() => {
+    const valid = mocks.filter(m => !m.absent && m.total !== undefined);
+    if (!valid.length) return null;
+
+    const sortedByDate = valid.map(m => {
+      let ds = m.date; 
+      let time = 0;
+      if (ds) {
+         let p = ds.split('/');
+         if (p.length === 3) time = new Date(+p[2], p[1]-1, +p[0]).getTime();
+      }
+      let max = parseFloat(m.max) || 200;
+      let total = parseFloat(m.total) || 0;
+      return { score: (total / max) * 200, time };
+    }).sort((a,b) => b.time - a.time);
+
+    const scores = sortedByDate.map(x => x.score);
+    const recent3 = scores.slice(0, 3);
+    const recentAvg = recent3.reduce((s, x) => s + x, 0) / recent3.length;
+    const overallAvg = scores.reduce((s, x) => s + x, 0) / scores.length;
+    const bestScore = Math.max(...scores);
+    const adjustment = (bestScore - overallAvg) * 0.3;
+
+    return Math.round((0.5 * recentAvg) + (0.3 * overallAvg) + (0.2 * (overallAvg + adjustment)));
+  }, [mocks]);
+
+  useEffect(() => { save({checks,conf,mocks}); }, [checks,conf,mocks]);
+  useEffect(() => { const t=setInterval(()=>setDL(getDaysLeft()),60000); return ()=>clearInterval(t); }, []);
+
+  const todayIdx = useMemo(getTodayIdx, []);
+
+  const weakTopics = useMemo(() =>
+    SYLLABUS.filter(s=>(conf[s.id]||3)<=2).sort((a,b)=>b.marks-a.marks), [conf]);
+  const doneSessions = Object.values(checks).filter(Boolean).length;
+  const totalSessions = SCHEDULE.length*3;
+  const progressPct = Math.round(doneSessions/totalSessions*100);
+  const activeDays = SCHEDULE.filter((_,i)=>[checks[`${i}m`],checks[`${i}s`],checks[`${i}e`]].some(Boolean)).length;
+
+  const todayDay = todayIdx>=0 ? SCHEDULE[todayIdx] : null;
+  const todayDone = todayIdx>=0 && !!checks[`${todayIdx}m`] && !!checks[`${todayIdx}s`] && !!checks[`${todayIdx}e`];
+  const toggle = (i,slot) => setChecks(p=>({...p,[`${i}${slot}`]:!p[`${i}${slot}`]}));
+
+  /* ── add mock ── */
+  const blankForm = () => ({name:"",date:"",total:"",max:"200",correct:"",wrong:"",skip:"",subs:{}});
+  const addMock = () => {
+    let total, max, subs={};
+    if(mockMode==="total"){
+      total=parseFloat(form.total); max=parseFloat(form.max);
+      if(isNaN(total)||isNaN(max)||total<0||total>max){alert("Enter a valid score.");return;}
+    } else {
+      const filled=SUB_SUBJECTS.filter(s=>form.subs[s.key]!==""&&form.subs[s.key]!==undefined);
+      if(!filled.length){alert("Enter marks for at least one subject.");return;}
+      for(const s of filled){
+        const v=parseFloat(form.subs[s.key]);
+        if(isNaN(v)||v<0||v>s.max){alert(`${s.label}: enter 0–${s.max}`);return;}
+        subs[s.key]=v;
+      }
+      total=parseFloat(filled.reduce((a,s)=>a+parseFloat(form.subs[s.key]),0).toFixed(2));
+      max=filled.reduce((a,s)=>a+s.max,0);
+    }
+    const c = form.correct!==""?parseInt(form.correct):undefined;
+    const w = form.wrong   !==""?parseInt(form.wrong)  :undefined;
+    const sk= form.skip    !==""?parseInt(form.skip)   :undefined;
+    // if correct+wrong given, auto-calculate total using +2/-0.5 scheme
+    if(mockMode==="total" && c!==undefined && w!==undefined) {
+      total = calcScore(c, w);
+      max   = 200;
+    }
+    const entry={
+      name:form.name||"Mock Test", date:form.date, total, max, subs,
+      ...(c!==undefined?{correct:c}:{}),
+      ...(w!==undefined?{wrong:w}:{}),
+      ...(sk!==undefined?{skip:sk}:{}),
+    };
+    setMocks(sortMocks([...mocks,entry]));
+    setShowF(false);
+    setForm(blankForm());
+  };
+
+  const TABS = [{id:"today",label:"Today"},{id:"topics",label:"Topic Ratings"},{id:"mock",label:"Mock Tests"},{id:"stats",label:"Analysis"},{id:"settings",label:"Settings"}];
+
+  /* ── 🚨 CLEAR ALL DATA ── */
+  const clearAllData = () => {
+    if(!confirm("⚠️ WARNING: This will permanently delete all your topic ratings, mock test scores, and study progress. Are you absolutely sure?")) return;
+    setChecks({});
+    setConf({});
+    setMocks(INITIAL_MOCKS);
+    alert("All your data has been successfully cleared.");
+  };
+
+  /* ── marking scheme: +2 correct, -0.5 wrong, 0 skip ── */
+  const calcScore = (correct, wrong) => parseFloat(((correct||0)*2 - (wrong||0)*0.5).toFixed(2));
+
+  return (
+    <div style={{minHeight:"100vh",background:"#07090f"}}>
+
+      {/* ── HEADER ── */}
+      <div style={{background:"#0d1117",borderBottom:"1px solid #1e293b",padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+        <div>
+          <div style={{fontSize:10,color:"#475569",letterSpacing:3,textTransform:"uppercase",...C.mono}}>GTU · DDCET 2026 · Engineering</div>
+          <div style={{fontSize:19,fontWeight:700,color:"#fff",marginTop:3}}>Study Planner — Target: 175/200</div>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {[
+            {label:"Days Left",  val:daysLeft,     color:"#f59e0b"},
+            {label:"Predicted",  val:prediction!==null?prediction:"--",   color:prediction!==null?scoreColor(prediction):"#64748b"},
+            {label:"Progress",   val:progressPct+"%", color:"#3b82f6"},
+          ].map(s=>(
+            <div key={s.label} style={{background:"#07090f",border:"1px solid #1e293b",borderRadius:8,padding:"7px 14px",textAlign:"center",minWidth:80}}>
+              <div style={{fontSize:20,fontWeight:700,color:s.color,...C.mono}}>{s.val}</div>
+              <div style={{fontSize:10,color:"#475569",marginTop:2,textTransform:"uppercase",letterSpacing:1}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── TABS ── */}
+      <div style={{background:"#0d1117",borderBottom:"1px solid #1e293b",padding:"0 24px",display:"flex",gap:2,flexWrap:"wrap"}}>
+        {TABS.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"11px 16px",border:"none",borderBottom: tab===t.id?"2px solid #f59e0b":"2px solid transparent",cursor:"pointer",fontSize:13,fontWeight: tab===t.id?700:500,background:"transparent",color: tab===t.id?"#f59e0b":"#475569",marginBottom:-1}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{padding:"20px 24px",maxWidth:1100,margin:"0 auto"}}>
+
+        {/* ════ TODAY ════ */}
+        {tab==="today" && (
+          <div>
+            {/* Exam info strip */}
+            <div style={{...C.card,marginBottom:14,padding:"14px 18px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
+                <div>
+                  <div style={{fontSize:11,color:"#475569",marginBottom:4,textTransform:"uppercase",letterSpacing:2}}>Exam Date</div>
+                  <div style={{fontSize:18,fontWeight:700,color:"#fff"}}>Sunday, 26 April 2026</div>
+                  <div style={{fontSize:13,color:"#f59e0b",marginTop:3}}>{daysLeft===0?"TODAY IS EXAM DAY!":daysLeft===1?"Tomorrow is exam day. Final revision only.":daysLeft+" days remaining"}</div>
+                </div>
+                <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:11,color:"#475569",marginBottom:4}}>Marking Scheme</div>
+                    <div style={{display:"flex",gap:10,...C.mono,fontSize:14,fontWeight:700}}>
+                      <span style={{color:"#22c55e"}}>+2 Correct</span>
+                      <span style={{color:"#64748b"}}>·</span>
+                      <span style={{color:"#ef4444"}}>−0.5 Wrong</span>
+                      <span style={{color:"#64748b"}}>·</span>
+                      <span style={{color:"#475569"}}>0 Skipped</span>
+                    </div>
+                    <div style={{fontSize:11,color:"#475569",marginTop:4}}>Skip any question you are less than 70% sure about</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Score prediction */}
+            <div style={{...C.card,marginBottom:14,display:"flex",alignItems:"center",gap:24,flexWrap:"wrap",padding:"18px 20px"}}>
+              <div style={{textAlign:"center",minWidth:110}}>
+                <div style={{fontSize:10,color:"#475569",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Predicted Score</div>
+                <div style={{fontSize:60,fontWeight:700,color:scoreColor(prediction),lineHeight:1,...C.mono}}>{prediction}</div>
+                <div style={{fontSize:12,color:"#475569",marginTop:2}}>out of 200</div>
+              </div>
+              <div style={{flex:1,minWidth:200}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5}}>
+                  <span style={{color:"#64748b"}}>Score vs Target (175)</span>
+                  <span style={{...C.mono,fontWeight:700,color:prediction>=175?"#22c55e":"#f59e0b"}}>
+                    {prediction>=175?"✓ TARGET MET":`Need ${175-prediction} more marks`}
+                  </span>
+                </div>
+                <div style={C.bar}>
+                  <div style={fill(`${Math.min(100,prediction/200*100)}%`,scoreColor(prediction))} />
+                  <div style={{position:"absolute",left:"87.5%",top:0,bottom:0,width:2,background:"#ffffff33"}} />
+                </div>
+                <div style={{fontSize:10,color:"#374151",marginTop:3}}>Target line at 175 (87.5%)</div>
+                <div style={{fontSize:12,color:"#475569",marginTop:8}}>
+                  Prediction uses your <strong style={{color:"#f59e0b"}}>topic confidence ratings</strong> (weight: 45%) + <strong style={{color:"#f59e0b"}}>last 3 mock test scores</strong> (weight: 55%).
+                  Rate topics accurately to get a precise prediction.
+                </div>
+              </div>
+            </div>
+
+
+            {/* Weak topics */}
+            {weakTopics.length>0 && (
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#ef4444",textTransform:"uppercase",letterSpacing:2,marginBottom:10}}>⚠️ Weak Topics — Act Now</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:8}}>
+                  {weakTopics.slice(0,6).map(t=>(
+                    <div key={t.id} style={{...C.card,padding:"10px 14px",borderColor:"#ef444433"}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"#fca5a5",marginBottom:3}}>{t.name}</div>
+                      <div style={{fontSize:11,color:"#475569"}}>{t.marks} marks at risk · {t.paper}</div>
+                      <div style={{fontSize:11,color:"#ef4444",marginTop:4}}>Rate this topic in Topics tab →</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Strategy */}
+            <div style={{...C.card,background:"rgba(245,158,11,0.04)",borderColor:"rgba(245,158,11,0.15)"}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:12}}>175/200 Target Strategy</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
+                {[
+                  {title:"Physics — 60 marks",     tip:"5 topics × 12 marks. Highest single block. Need ~52/60 (87%)."},
+                  {title:"English — 50 marks",     tip:"Grammar, comprehension, writing. Concept-based. Easy to score 44/50."},
+                  {title:"Math — 50 marks",        tip:"Diff + Integ = 16 marks. Matrices = 8 marks. Prioritise these 3."},
+                  {title:"Chemistry — 20 marks",   tip:"Acids & Salts = 8 marks. Easiest to memorise. Target 16/20."},
+                  {title:"Computer — 10 marks",    tip:"MS Office + basics = near free marks. Must score 9/10."},
+                  {title:"Attempt strategy",        tip:"Score 90 correct with 0 wrong = 180. Skip if less than 70% sure."},
+                ].map(s=>(
+                  <div key={s.title}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#f59e0b",marginBottom:3}}>{s.title}</div>
+                    <div style={{fontSize:11,color:"#64748b",lineHeight:1.5}}>{s.tip}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════ TOPIC RATINGS ════ */}
+        {tab==="topics" && (
+          <div>
+            <div style={{...C.card,background:"rgba(59,130,246,0.06)",borderColor:"rgba(59,130,246,0.2)",marginBottom:16,padding:"12px 16px",fontSize:13,color:"#93c5fd",lineHeight:1.6}}>
+              Rate each topic <strong>1–5</strong> based on your current knowledge.
+              This is the most important thing you can do — it directly updates your score prediction.<br/>
+              <span style={{fontSize:12,color:"#475569"}}>1 = Don't know · 2 = Weak · 3 = Okay · 4 = Good · 5 = Strong</span>
+            </div>
+
+            {["Physics","Chemistry","Other","Math","English"].map(group=>{
+              const subs = SYLLABUS.filter(s=>s.group===group);
+              const expected = Math.round(subs.reduce((s,t)=>s+(conf[t.id]||3)/5*t.marks,0));
+              const max = subs.reduce((s,t)=>s+t.marks,0);
+              const pct = Math.round(expected/max*100);
+              const labels = ["","Very Weak","Weak","Okay","Good","Strong"];
+              const colors = ["","#ef4444","#f97316","#f59e0b","#22c55e","#22c55e"];
+              return (
+                <div key={group} style={{marginBottom:20}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2}}>{group}</div>
+                    <div style={{fontSize:13,...C.mono,color:pct>=85?"#22c55e":pct>=65?"#f59e0b":"#ef4444",fontWeight:700}}>
+                      Expected: {expected}/{max} marks ({pct}%)
+                    </div>
+                  </div>
+                  {subs.map(sub=>{
+                    const v = conf[sub.id]||3;
+                    const exp = Math.round(v/5*sub.marks);
+                    return (
+                      <div key={sub.id} style={{...C.card,padding:"12px 16px",marginBottom:6,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                        <div style={{flex:1,minWidth:160}}>
+                          <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{sub.name}</div>
+                          <div style={{fontSize:11,color:"#475569",marginTop:2}}>
+                            {sub.paper} · {sub.marks} marks available
+                            <span style={{marginLeft:8,...C.mono,color:confColor(v),fontWeight:700}}>→ exp. {exp}/{sub.marks}</span>
+                          </div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                          <span style={{fontSize:11,color:colors[v],minWidth:58,textAlign:"right"}}>{labels[v]}</span>
+                          <div style={{display:"flex",gap:3}}>
+                            {[1,2,3,4,5].map(n=>(
+                              <button key={n} onClick={()=>setConf(p=>({...p,[sub.id]:n}))}
+                                style={{width:33,height:33,borderRadius:7,border:"none",cursor:"pointer",
+                                  background:n<=v?colors[v]+"22":"#0f172a",
+                                  color:n<=v?colors[v]:"#374151",
+                                  fontSize:13,fontWeight:700,...C.mono,
+                                  outline:n===v?`2px solid ${colors[v]}`:"none",
+                                  outlineOffset:1}}>
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        {v<=2&&<div style={{width:"100%",marginTop:6,padding:"6px 10px",borderRadius:6,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",fontSize:11,color:"#fca5a5"}}>⚠️ {sub.marks} marks at risk. Add this to today's revision.</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ════ MOCK TESTS ════ */}
+        {tab==="mock" && (
+          <div>
+
+            {/* ── SUMMARY TABLE ── */}
+            {(()=>{
+              const valid = mocks.filter(m=>!m.absent);
+              const totalTests = mocks.length;
+              const attempted  = valid.length;
+              const absent     = mocks.filter(m=>m.absent).length;
+              const totalCorrect  = valid.reduce((a,m)=>a+(m.correct||0),0);
+              const totalWrong    = valid.reduce((a,m)=>a+(m.wrong||0),0);
+              const totalSkip     = valid.reduce((a,m)=>a+(m.skip||0),0);
+              const totalEarned   = valid.reduce((a,m)=>a+m.total,0);
+              const best = valid.length ? Math.max(...valid.map(m=>Math.round(m.total/m.max*200))) : 0;
+              return (
+                <div style={{...C.card,marginBottom:16,padding:"16px 18px",borderColor:"rgba(245,158,11,0.2)"}}>
+                  <div style={{fontSize:11,color:"#475569",textTransform:"uppercase",letterSpacing:2,marginBottom:12}}>Mock Test Summary</div>
+                  {/* Hero stats row */}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:16}}>
+                    {[
+                      {label:"Total Tests",  val:totalTests,               color:"#94a3b8"},
+                      {label:"Attempted",    val:attempted,                 color:"#22c55e"},
+                      {label:"Absent",       val:absent,                    color:absent>0?"#ef4444":"#374151"},
+                      {label:"Total Correct",val:totalCorrect,             color:"#22c55e"},
+                      {label:"Total Wrong",  val:totalWrong,               color:"#ef4444"},
+                      {label:"Total Skipped",val:totalSkip,                color:"#64748b"},
+                      {label:"Best (scaled)",val:best+"/200",              color:scoreColor(best)},
+                    ].map(s=>(
+                      <div key={s.label} style={{background:"#07090f",borderRadius:8,padding:"10px 12px",border:"1px solid #1e293b",textAlign:"center"}}>
+                        <div style={{fontSize:20,fontWeight:700,...C.mono,color:s.color}}>{s.val}</div>
+                        <div style={{fontSize:10,color:"#374151",marginTop:3}}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Marking rule reminder */}
+                  <div style={{fontSize:11,color:"#475569",marginBottom:12,padding:"7px 12px",background:"#07090f",borderRadius:6,border:"1px solid #1e293b",...C.mono}}>
+                    Marking scheme: <span style={{color:"#22c55e",fontWeight:700}}>+2</span> correct &nbsp;·&nbsp; <span style={{color:"#ef4444",fontWeight:700}}>−0.5</span> wrong &nbsp;·&nbsp; <span style={{color:"#64748b"}}>0</span> skipped &nbsp;·&nbsp; Score = Correct×2 − Wrong×0.5
+                  </div>
+                  {/* Table */}
+                  <div style={{overflowX:"auto"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                      <thead>
+                        <tr style={{borderBottom:"1px solid #1e293b"}}>
+                          {["Test Name","Date","Score","Max","Scaled /200","+2 Correct","−0.5 Wrong","0 Skip","% Score","Result"].map(h=>(
+                            <th key={h} style={{textAlign:"left",padding:"7px 10px",color:"#475569",fontWeight:600,whiteSpace:"nowrap",...C.mono,fontSize:10,textTransform:"uppercase",letterSpacing:1}}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mocks.map((m,i)=>{
+                          if(m.absent) return (
+                            <tr key={i} style={{borderBottom:"1px solid #0f172a",opacity:0.4}}>
+                              <td style={{padding:"7px 10px",color:"#64748b"}}>{m.name}</td>
+                              <td style={{padding:"7px 10px",color:"#374151",...C.mono}}>{m.date||"—"}</td>
+                              <td colSpan={8} style={{padding:"7px 10px",color:"#475569",fontSize:11}}>Absent</td>
+                            </tr>
+                          );
+                          const pct   = Math.round(m.total/m.max*100);
+                          const sc200 = Math.round(m.total/m.max*200);
+                          const col   = scoreColor(sc200);
+                          // verify: if correct+wrong known, show calculated vs stored
+                          const calc  = (m.correct!==undefined&&m.wrong!==undefined) ? calcScore(m.correct,m.wrong) : null;
+                          const mismatch = calc!==null && Math.abs(calc-m.total)>0.6;
+                          return (
+                            <tr key={i} style={{borderBottom:"1px solid #0f172a",background:i%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
+                              <td style={{padding:"7px 10px",color:"#e2e8f0",fontWeight:600}}>{m.name}</td>
+                              <td style={{padding:"7px 10px",color:"#64748b",...C.mono,whiteSpace:"nowrap"}}>{m.date||"—"}</td>
+                              <td style={{padding:"7px 10px",...C.mono,fontWeight:700,color:col}}>{m.total}</td>
+                              <td style={{padding:"7px 10px",color:"#374151",...C.mono}}>{m.max}</td>
+                              <td style={{padding:"7px 10px",...C.mono,fontWeight:700,color:col}}>{sc200}</td>
+                              <td style={{padding:"7px 10px",color:"#22c55e",...C.mono,fontWeight:600}}>{m.correct!==undefined?m.correct:"—"}</td>
+                              <td style={{padding:"7px 10px",color:"#ef4444",...C.mono,fontWeight:600}}>{m.wrong!==undefined?m.wrong:"—"}</td>
+                              <td style={{padding:"7px 10px",color:"#64748b",...C.mono}}>{m.skip!==undefined?m.skip:"—"}</td>
+                              <td style={{padding:"7px 10px",...C.mono,color:pct>=87?"#22c55e":pct>=75?"#3b82f6":pct>=60?"#f59e0b":"#ef4444",fontWeight:700}}>{pct}%</td>
+                              <td style={{padding:"7px 10px"}}>
+                                <span style={{fontSize:10,padding:"2px 8px",borderRadius:4,background:col+"22",color:col,fontWeight:700,...C.mono,whiteSpace:"nowrap"}}>
+                                  {pct>=87?"Excellent":pct>=75?"Good":pct>=60?"Average":"Needs Work"}
+                                </span>
+                                {mismatch&&<span style={{marginLeft:4,fontSize:10,color:"#f59e0b"}} title={`Calculated score: ${calc}`}>⚠️</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      {/* Totals row */}
+                      {mocks.filter(m=>!m.absent).length>0&&(
+                        <tfoot style={{borderTop:"1px solid #1e293b"}}>
+                          <tr>
+                            <td colSpan={2} style={{padding:"8px 10px",color:"#64748b",fontWeight:700,textAlign:"right"}}>TOTALS (Attempted)</td>
+                            <td style={{padding:"8px 10px",color:"#f59e0b",fontWeight:700,...C.mono}}>{totalEarned}</td>
+                            <td colSpan={2}></td>
+                            <td style={{padding:"8px 10px",color:"#22c55e",fontWeight:700,...C.mono}}>{totalCorrect}</td>
+                            <td style={{padding:"8px 10px",color:"#ef4444",fontWeight:700,...C.mono}}>{totalWrong}</td>
+                            <td style={{padding:"8px 10px",color:"#64748b",fontWeight:700,...C.mono}}>{totalSkip}</td>
+                            <td colSpan={2}></td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
+              <div style={{fontSize:12,color:"#475569"}}>Prediction uses your latest 3 scores (weighted 55%). If you enter Correct + Wrong, score is auto-calculated (+2/−0.5).</div>
+              <button onClick={()=>setShowF(true)} style={C.btn}>+ Add Score</button>
+            </div>
+
+            {showForm&&(
+              <div style={{...C.card,borderColor:"rgba(245,158,11,0.3)",marginBottom:14,padding:"16px 18px"}}>
+                <div style={{fontSize:14,fontWeight:600,color:"#f59e0b",marginBottom:14}}>Add Mock Test Score</div>
+
+                {/* Name + Date */}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:14}}>
+                  <div>
+                    <div style={C.label}>Test Name (optional)</div>
+                    <input type="text" placeholder="DDCET Mock Test 3" value={form.name}
+                      onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={C.input} />
+                  </div>
+                  <div>
+                    <div style={C.label}>Date (dd/mm/yyyy)</div>
+                    <input type="text" placeholder="22/03/2026" value={form.date}
+                      onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={C.input} />
+                  </div>
+                </div>
+
+                {/* Mode toggle */}
+                <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+                  {[{id:"total",label:"Total Marks"},{id:"subject",label:"Subject-wise Marks"}].map(m=>(
+                    <button key={m.id} onClick={()=>setMMode(m.id)} style={{
+                      padding:"7px 16px",borderRadius:7,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,
+                      background:mockMode===m.id?"#f59e0b":"#1e293b",
+                      color:mockMode===m.id?"#000":"#64748b"}}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ── TOTAL MODE ── */}
+                {mockMode==="total"&&(
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:14}}>
+                    <div>
+                      <div style={C.label}>Your Score</div>
+                      <input type="number" placeholder="120" value={form.total}
+                        onChange={e=>setForm(p=>({...p,total:e.target.value}))}
+                        style={{...C.input,color:form.total?"#f59e0b":"#e2e8f0",fontWeight:700,...C.mono}} />
+                    </div>
+                    <div>
+                      <div style={C.label}>Max Marks</div>
+                      <input type="number" placeholder="200" value={form.max}
+                        onChange={e=>setForm(p=>({...p,max:e.target.value}))} style={C.input} />
+                    </div>
+                    <div>
+                      <div style={C.label}>Correct Qs</div>
+                      <input type="number" placeholder="60" value={form.correct}
+                        onChange={e=>setForm(p=>({...p,correct:e.target.value}))}
+                        style={{...C.input,color:"#22c55e"}} />
+                    </div>
+                    <div>
+                      <div style={C.label}>Wrong Qs</div>
+                      <input type="number" placeholder="10" value={form.wrong}
+                        onChange={e=>setForm(p=>({...p,wrong:e.target.value}))}
+                        style={{...C.input,color:"#ef4444"}} />
+                    </div>
+                    <div>
+                      <div style={C.label}>Skipped Qs</div>
+                      <input type="number" placeholder="30" value={form.skip}
+                        onChange={e=>setForm(p=>({...p,skip:e.target.value}))}
+                        style={{...C.input,color:"#64748b"}} />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── SUBJECT-WISE MODE ── */}
+                {mockMode==="subject"&&(
+                  <div style={{marginBottom:14}}>
+                    <div style={{fontSize:11,color:"#475569",marginBottom:10}}>Leave blank for subjects not included in this test.</div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:8,marginBottom:12}}>
+                      {SUB_SUBJECTS.map(s=>{
+                        const v=form.subs[s.key]!==undefined?form.subs[s.key]:"";
+                        const pct=v!==""&&!isNaN(parseFloat(v))?Math.round(parseFloat(v)/s.max*100):null;
+                        const sc=pct===null?"#475569":pct>=75?"#22c55e":pct>=50?"#f59e0b":"#ef4444";
+                        return (
+                          <div key={s.key} style={{background:"#07090f",borderRadius:8,padding:"10px 12px",border:"1px solid #1e293b"}}>
+                            <div style={{fontSize:12,fontWeight:600,color:"#94a3b8",marginBottom:6}}>{s.label} <span style={{color:"#374151",fontWeight:400}}>/{s.max}</span></div>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <input type="number" min={0} max={s.max} placeholder="—" value={v}
+                                onChange={e=>setForm(p=>({...p,subs:{...p.subs,[s.key]:e.target.value}}))}
+                                style={{...C.input,width:65,textAlign:"center",...C.mono,fontSize:16,fontWeight:700,padding:"6px 8px",color:v?sc:"#475569",borderColor:v?sc+"55":"#1e293b"}} />
+                              {pct!==null&&<span style={{fontSize:12,fontWeight:700,color:sc,...C.mono}}>{pct}%</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Also allow correct/wrong/skip in subject mode */}
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8}}>
+                      {[{f:"correct",label:"Correct Qs",col:"#22c55e"},{f:"wrong",label:"Wrong Qs",col:"#ef4444"},{f:"skip",label:"Skipped",col:"#64748b"}].map(x=>(
+                        <div key={x.f}>
+                          <div style={C.label}>{x.label}</div>
+                          <input type="number" placeholder="—" value={form[x.f]}
+                            onChange={e=>setForm(p=>({...p,[x.f]:e.target.value}))}
+                            style={{...C.input,color:form[x.f]?x.col:"#475569"}} />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Running total */}
+                    {(()=>{
+                      const filled=SUB_SUBJECTS.filter(s=>form.subs[s.key]!==""&&form.subs[s.key]!==undefined);
+                      if(!filled.length) return null;
+                      const sum=filled.reduce((a,s)=>a+parseFloat(form.subs[s.key]||0),0);
+                      const mx=filled.reduce((a,s)=>a+s.max,0);
+                      return (
+                        <div style={{marginTop:10,fontSize:13,...C.mono,color:"#f59e0b",fontWeight:700}}>
+                          Total: {sum.toFixed(1)}/{mx} = {Math.round(sum/mx*100)}% · Scaled: {Math.round(sum/mx*200)}/200
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Preview in total mode */}
+                {mockMode==="total"&&form.total&&form.max&&!isNaN(parseFloat(form.total))&&!isNaN(parseFloat(form.max))&&(
+                  <div style={{fontSize:12,...C.mono,color:scoreColor(parseFloat(form.total)/parseFloat(form.max)*200),marginBottom:10,fontWeight:700}}>
+                    = {Math.round(parseFloat(form.total)/parseFloat(form.max)*100)}% · Scaled: {Math.round(parseFloat(form.total)/parseFloat(form.max)*200)}/200
+                  </div>
+                )}
+
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={addMock} style={C.btn}>Save Score</button>
+                  <button onClick={()=>{setShowF(false);setForm(blankForm());}} style={C.ghost}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {/* Summary stats */}
+            {(()=>{
+              const valid=mocks.filter(m=>!m.absent&&m.total>0);
+              if(!valid.length) return null;
+              const pcts=valid.map(m=>Math.round(m.total/m.max*100));
+              const best=Math.max(...pcts), latest=pcts[0], avg=Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+              const trend=pcts.length>=2?pcts[0]-pcts[1]:null;
+              return (
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginBottom:14}}>
+                  {[
+                    {label:"Latest",  val:latest+"%",   color:scoreColor(latest*2)},
+                    {label:"Best",    val:best+"%",      color:"#22c55e"},
+                    {label:"Average", val:avg+"%",       color:"#3b82f6"},
+                    {label:"Trend",   val:trend===null?"—":trend===0?"→":trend>0?"↑"+trend+"%":"↓"+Math.abs(trend)+"%",  color:trend===null||trend===0?"#64748b":trend>0?"#22c55e":"#ef4444"},
+                    {label:"Total Tests", val:valid.length, color:"#94a3b8"},
+                  ].map(s=>(
+                    <div key={s.label} style={{...C.card,padding:"12px 14px",textAlign:"center"}}>
+                      <div style={{fontSize:22,fontWeight:700,color:s.color,...C.mono}}>{s.val}</div>
+                      <div style={{fontSize:10,color:"#475569",marginTop:3,textTransform:"uppercase",letterSpacing:1}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Mock list */}
+            {mocks.map((m,i)=>{
+              const pct=m.absent?0:Math.round(m.total/m.max*100);
+              const scaled=Math.round(m.total/m.max*200);
+              const col=m.absent?"#64748b":scoreColor(pct*2);
+              const hasSub=!m.absent&&m.subs&&Object.keys(m.subs).length>0;
+              return (
+                <div key={i} style={{...C.card,marginBottom:8,opacity:m.absent?0.45:1}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>{m.name}</div>
+                      <div style={{fontSize:11,color:"#475569",marginTop:2}}>
+                        {m.date||"No date"}
+                        {m.correct!==undefined&&!m.absent&&` · ✅ ${m.correct} correct · ❌ ${m.wrong} wrong · ⭕ ${m.skip} skipped`}
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      {m.absent?(
+                        <div style={{fontSize:13,color:"#64748b",background:"#1e293b",borderRadius:6,padding:"4px 10px"}}>Absent</div>
+                      ):(
+                        <>
+                          <div style={{fontSize:26,fontWeight:700,color:col,...C.mono}}>{m.total}<span style={{fontSize:13,color:"#475569"}}>/{m.max}</span></div>
+                          <div style={{fontSize:11,color:"#475569"}}>{pct}% · est. {scaled}/200 on DDCET scale</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {hasSub&&(
+                    <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
+                      {SUB_SUBJECTS.filter(s=>(m.subs||{})[s.key]!==undefined).map(s=>{
+                        const v=(m.subs||{})[s.key];
+                        const sp=Math.round(v/s.max*100);
+                        return (
+                          <div key={s.key} style={{background:"#07090f",borderRadius:7,padding:"6px 10px",border:"1px solid #1e293b"}}>
+                            <div style={{fontSize:10,color:"#475569",marginBottom:2}}>{s.label}</div>
+                            <div style={{fontSize:14,fontWeight:700,...C.mono,color:sp>=75?"#22c55e":sp>=50?"#f59e0b":"#ef4444"}}>{v}<span style={{fontSize:10,color:"#475569"}}>/{s.max}</span></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ════ ANALYSIS ════ */}
+        {tab==="stats" && (
+          <div>
+            {/* Score breakdown by paper */}
+            {["BE-01","BE-02"].map(paper=>{
+              const subs=SYLLABUS.filter(s=>s.paper===paper);
+              const expected=Math.round(subs.reduce((s,t)=>s+(conf[t.id]||3)/5*t.marks,0));
+              const max=subs.reduce((s,t)=>s+t.marks,0);
+              const pct=Math.round(expected/max*100);
+              return (
+                <div key={paper} style={{...C.card,marginBottom:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>
+                      {paper==="BE-01"?"BE-01 — Basics of Science & Engineering (100 marks)":"BE-02 — Mathematics & Soft Skills (100 marks)"}
+                    </div>
+                    <div style={{...C.mono,fontWeight:700,fontSize:14,color:scoreColor(expected+expected)}}>
+                      Expected: {expected}/{max} ({pct}%)
+                    </div>
+                  </div>
+                  {subs.map(sub=>{
+                    const v=conf[sub.id]||3;
+                    const exp=Math.round(v/5*sub.marks);
+                    const c=confColor(v);
+                    return (
+                      <div key={sub.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:7,flexWrap:"wrap"}}>
+                        <div style={{fontSize:12,color:"#64748b",minWidth:200}}>{sub.name}</div>
+                        <div style={{flex:1,minWidth:80,...C.bar,height:6}}>
+                          <div style={fill(`${v/5*100}%`,c)} />
+                        </div>
+                        <div style={{fontSize:12,...C.mono,color:c,minWidth:55,textAlign:"right",fontWeight:600}}>{exp}/{sub.marks}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* Mark targets */}
+            <div style={{...C.card,background:"rgba(245,158,11,0.04)",borderColor:"rgba(245,158,11,0.15)",marginBottom:12}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:12}}>Marks Needed Per Subject to Hit 175/200</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:8}}>
+                {[
+                  {sub:"Physics (60)",     need:52, note:"5 topics × 12 marks, need 87%"},
+                  {sub:"English (50)",     need:44, note:"Grammar + comprehension = easiest 44"},
+                  {sub:"Math (50)",        need:42, note:"Calculus + Matrices = 24 marks alone"},
+                  {sub:"Chemistry (20)",   need:16, note:"Acids & Salts = 8 marks, memorisable"},
+                  {sub:"Computer (10)",    need:9,  note:"MS Office basics — near free marks"},
+                  {sub:"Environment (10)", need:8,  note:"Pollution, ecosystems — factual recall"},
+                ].map(s=>{
+                  const cur = (() => {
+                    const subMap = {
+                      "Physics (60)":     SYLLABUS.filter(x=>x.group==="Physics"),
+                      "English (50)":     SYLLABUS.filter(x=>x.group==="English"),
+                      "Math (50)":        SYLLABUS.filter(x=>x.group==="Math"),
+                      "Chemistry (20)":   SYLLABUS.filter(x=>x.group==="Chemistry"),
+                      "Computer (10)":    SYLLABUS.filter(x=>x.id==="comp"),
+                      "Environment (10)": SYLLABUS.filter(x=>x.id==="env"),
+                    };
+                    const subs2 = subMap[s.sub]||[];
+                    return Math.round(subs2.reduce((acc,t)=>acc+(conf[t.id]||3)/5*t.marks,0));
+                  })();
+                  const max2 = parseInt(s.sub.match(/\d+/)[0]);
+                  const ok = cur >= s.need;
+                  return (
+                    <div key={s.sub} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",border:`1px solid ${ok?"#22c55e22":"#1e293b"}`}}>
+                      <div style={{fontSize:12,fontWeight:700,color:ok?"#22c55e":"#e2e8f0",marginBottom:3}}>{s.sub}</div>
+                      <div style={{fontSize:11,color:"#475569",marginBottom:6}}>{s.note}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,...C.mono,marginBottom:4}}>
+                        <span style={{color:"#475569"}}>Need: <strong style={{color:"#f59e0b"}}>{s.need}</strong></span>
+                        <span style={{color:ok?"#22c55e":"#ef4444"}}>Current: {cur}</span>
+                      </div>
+                      <div style={C.bar}>
+                        <div style={fill(`${Math.min(100,cur/max2*100)}%`,ok?"#22c55e":"#f59e0b")} />
+                        <div style={{position:"absolute",left:`${s.need/max2*100}%`,top:0,bottom:0,width:1,background:"#ffffff44"}} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Progress summary */}
+            <div style={{...C.card}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>Overall Progress Summary</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8}}>
+                {[
+                  {label:"Sessions Completed", val:`${doneSessions}/${totalSessions}`, sub:`${progressPct}% done`,   color:"#3b82f6"},
+                  {label:"Active Study Days",   val:`${activeDays}/30`,                sub:"days with any session",   color:"#22c55e"},
+                  {label:"Weak Topics",          val:weakTopics.length,                 sub:"rated 1 or 2 out of 5",   color:weakTopics.length>4?"#ef4444":"#f59e0b"},
+                  {label:"Mock Tests Taken",     val:mocks.filter(m=>!m.absent&&m.total>0).length, sub:"attempted", color:"#8b5cf6"},
+                  {label:"Predicted Score",      val:prediction!==null?prediction:"--", sub:prediction!==null?(175-prediction>0?175-prediction+" marks to go":"Target met!"):"take tests to predict", color:prediction!==null?scoreColor(prediction):"#64748b"},
+                  {label:"Days Remaining",       val:daysLeft,                          sub:"until April 26",          color:daysLeft<=5?"#ef4444":daysLeft<=14?"#f59e0b":"#22c55e"},
+                ].map(s=>(
+                  <div key={s.label} style={{background:"rgba(255,255,255,0.025)",borderRadius:10,padding:"12px 14px"}}>
+                    <div style={{fontSize:24,fontWeight:700,color:s.color,...C.mono}}>{s.val}</div>
+                    <div style={{fontSize:11,fontWeight:600,color:"#64748b",marginTop:4}}>{s.label}</div>
+                    <div style={{fontSize:10,color:"#374151",marginTop:2}}>{s.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════ SETTINGS / DANGER ZONE ════ */}
+        {tab==="settings" && (
+          <div>
+            <div style={{...C.card, borderColor:"rgba(239, 68, 68, 0.3)", padding:"24px"}}>
+              <h3 style={{color:"#fca5a5", fontSize:"18px", marginBottom:"8px"}}>Danger Zone</h3>
+              <p style={{color:"#94a3b8", fontSize:"13px", marginBottom:"20px"}}>
+                This will permanently delete all your study progress, topic confidence ratings, and manually added mock test scores from this device.
+                This action cannot be undone.
+              </p>
+              <button onClick={clearAllData} style={{
+                background:"#b42318", color:"#fff", border:"none", borderRadius:"8px", 
+                padding:"10px 20px", fontSize:"14px", fontWeight:"600", cursor:"pointer",
+                transition: "background 0.2s"
+              }} onMouseOver={(e)=>e.target.style.background="#8e1c14"} onMouseOut={(e)=>e.target.style.background="#b42318"}>
+                🗑️ Clear All My Data
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+  </script>
+
+  <!-- ═══ QUIZ ENGINE ═══ -->
+  <script>
+/* ══════════════════════════════════════════════════════════
+   DDCET QUIZ MODULE — quiz.js
+   Extracted verbatim from original index.html quiz engine.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── VERSIONING ── */
+const STATE_VER    = "v5";
+const K_STATE      = "cq_state_"    + STATE_VER;
+const K_MASTERED   = "cq_mastered_" + STATE_VER;
+
+// Wipe all previous versions silently
+["cq_state_v1","cq_state_v2","cq_state_v3","cq_state_v4",
+ "cq_mastered_v1","cq_mastered_v2","cq_mastered_v3","cq_mastered_v4",
+ "csvQuiz_inProgressState","csvQuiz_completedQuestionKeys",
+ "csvQuiz_state_v1","csvQuiz_state_v2","csvQuiz_state_v3",
+ "csvQuiz_completed_v1","csvQuiz_completed_v2","csvQuiz_completed_v3",
+ "csvQuiz_mastered_v1","csvQuiz_mastered_v2","csvQuiz_mastered_v3"
+].forEach(k => localStorage.removeItem(k));
+
+const SCORE_RULES = { correct: 2, wrong: -0.5, unattempted: 0 };
+
+/* ── STATE ── */
+let allQ = [];
+let ts   = null;
+
+/* ── DOM REFS ── */
+const el = {
+  loaderCard   : document.getElementById("loaderCard"),
+  startCard    : document.getElementById("startCard"),
+  subjectCard  : document.getElementById("subjectCard"),
+  quizCard     : document.getElementById("quizCard"),
+  resultCard   : document.getElementById("resultCard"),
+  loadStatus   : document.getElementById("loadStatus"),
+  pickFileBtn  : document.getElementById("pickFileBtn"),
+  csvFileInput : document.getElementById("csvFileInput"),
+  availableInfo: document.getElementById("availableInfo"),
+  resumeRow    : document.getElementById("resumeRow"),
+  qNumber      : document.getElementById("questionNumber"),
+  qText        : document.getElementById("questionText"),
+  opts         : document.getElementById("optionsContainer"),
+  feedback     : document.getElementById("feedbackBanner"),
+  score        : document.getElementById("scoreValue"),
+  answered     : document.getElementById("answeredValue"),
+  left         : document.getElementById("leftValue"),
+  progress     : document.getElementById("progressFill"),
+  prevBtn      : document.getElementById("prevBtn"),
+  nextBtn      : document.getElementById("nextBtn"),
+  submitBtn    : document.getElementById("submitBtn"),
+  smallNote    : document.getElementById("smallNote"),
+  finalScore   : document.getElementById("finalScore"),
+  finalCorrect : document.getElementById("finalCorrect"),
+  finalWrong   : document.getElementById("finalWrong"),
+  finalSkipped : document.getElementById("finalSkipped"),
+  wrongReview  : document.getElementById("wrongReview"),
+  newTestBtn   : document.getElementById("newTestBtn"),
+  clearBtn     : document.getElementById("clearProgressBtn")
+};
+
+/* ── BOOT ── */
+quizInit();
+
+function quizInit() {
+  bindEvents();
+  showLoader("Please upload your MCQ Bank CSV file to begin.");
+}
+
+/* ── EVENTS ── */
+function bindEvents() {
+  el.pickFileBtn.addEventListener("click", () => el.csvFileInput.click());
+  el.csvFileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const qs = parseAndNormalize(await file.text());
+    if (!qs.length) { el.loadStatus.textContent = "No valid rows found in that CSV."; return; }
+    allQ = qs;
+    el.loadStatus.textContent = `Loaded ${allQ.length} questions from ${file.name}.`;
+    afterLoaded();
+  });
+
+  document.querySelectorAll("[data-sz]").forEach(b =>
+    b.addEventListener("click", () => { removeResumeBtn(); showSubjectSelection(b.dataset.sz); })
+  );
+
+  document.getElementById("selectAllSubjBtn").addEventListener("click", () => {
+    document.querySelectorAll(".subj-checkbox").forEach(cb => cb.checked = true);
+  });
+  document.getElementById("clearAllSubjBtn").addEventListener("click", () => {
+    document.querySelectorAll(".subj-checkbox").forEach(cb => cb.checked = false);
+  });
+  document.getElementById("backToStartBtn").addEventListener("click", () => {
+    showOnly("startCard");
+  });
+  document.getElementById("startQuizFinalBtn").addEventListener("click", () => {
+    const selected = Array.from(document.querySelectorAll(".subj-checkbox:checked")).map(cb => cb.value);
+    if (!selected.length) { alert("Please select at least one subject."); return; }
+    startFresh(selectedSizeCap, selected);
+  });
+
+  el.prevBtn.addEventListener("click",   goPrev);
+  el.nextBtn.addEventListener("click",   handleNext);
+  el.submitBtn.addEventListener("click", confirmSubmit);
+
+  el.newTestBtn.addEventListener("click", () => {
+    delState(); removeResumeBtn(); showStart();
+  });
+  el.clearBtn.addEventListener("click", () => {
+    if (!confirm("Reset ALL progress including mastered questions?")) return;
+    delState(); delMastered(); removeResumeBtn(); showStart();
+  });
+
+  // Save Score button
+  const saveScoreBtn = document.getElementById("saveScoreBtn");
+  if (saveScoreBtn) {
+    saveScoreBtn.addEventListener("click", saveScoreToMockTests);
+  }
+}
+
+let selectedSizeCap = "10";
+
+const SUBJECT_ICONS = {
+  Physics: "⚛️", Chemistry: "🧪", Computer: "💻",
+  Environment: "🌍", English: "📝", Other: "📚"
+};
+
+function showSubjectSelection(szKey) {
+  selectedSizeCap = szKey;
+  document.getElementById("chosenSizeDisplay").textContent = szKey === "full" ? "Full" : szKey;
+
+  const subjectMap = {};
+  allQ.forEach(q => {
+    const subj = q.subject || "Other";
+    if (!subjectMap[subj]) subjectMap[subj] = { subtopics: new Set(), count: 0 };
+    subjectMap[subj].subtopics.add(q.subtopic);
+    subjectMap[subj].count++;
+  });
+
+  const cardsContainer = document.getElementById("subjectCardsContainer");
+  cardsContainer.innerHTML = "";
+  const orderedSubjects = ["Physics", "Chemistry", "Computer", "Environment", "English"].filter(s => subjectMap[s]);
+  Object.keys(subjectMap).forEach(s => { if (!orderedSubjects.includes(s)) orderedSubjects.push(s); });
+
+  orderedSubjects.forEach(subj => {
+    const card = document.createElement("div");
+    card.className = "subject-card active";
+    card.dataset.subject = subj;
+    card.innerHTML = `<span class="sc-icon">${SUBJECT_ICONS[subj] || "📚"}</span>
+      <span class="sc-name">${subj}</span>
+      <span class="sc-count">${subjectMap[subj].count} Qs</span>`;
+    card.addEventListener("click", () => {
+      card.classList.toggle("active");
+      refreshSubtopicList(subjectMap);
+    });
+    cardsContainer.appendChild(card);
+  });
+
+  refreshSubtopicList(subjectMap);
+  showOnly("subjectCard");
+}
+
+function refreshSubtopicList(subjectMap) {
+  const activeSubjects = Array.from(document.querySelectorAll(".subject-card.active")).map(c => c.dataset.subject);
+  const container = document.getElementById("subjectContainer");
+  container.innerHTML = "";
+
+  activeSubjects.forEach(subj => {
+    const subtopics = [...(subjectMap[subj]?.subtopics || [])].sort();
+    if (!subtopics.length) return;
+
+    const label = document.createElement("div");
+    label.className = "subtopic-section-label";
+    label.style.gridColumn = "1 / -1";
+    label.textContent = `${SUBJECT_ICONS[subj] || "📚"} ${subj} (${subtopics.length} topics)`;
+    container.appendChild(label);
+
+    subtopics.forEach(sub => {
+      const count = allQ.filter(q => q.subtopic === sub).length;
+      const lbl = document.createElement("label");
+      lbl.className = "subject-item";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.value = sub; cb.className = "subj-checkbox"; cb.checked = true;
+      const txt = document.createElement("span");
+      txt.textContent = `${sub} (${count})`;
+      lbl.appendChild(cb);
+      lbl.appendChild(txt);
+      container.appendChild(lbl);
+    });
+  });
+}
+
+/* ── SCREEN MANAGEMENT ── */
+function showOnly(id) {
+  ["loaderCard","startCard","subjectCard","quizCard","resultCard"].forEach(s =>
+    document.getElementById(s).classList.toggle("qz-hidden", s !== id)
+  );
+}
+
+function showLoader(msg) { el.loadStatus.textContent = msg; showOnly("loaderCard"); }
+
+function showStart() {
+  const mastered  = getMastered();
+  const available = allQ.filter(q => !mastered.has(q.pk)).length;
+  el.availableInfo.textContent = `Available: ${available} question${available !== 1 ? "s" : ""}` +
+    (mastered.size ? ` · ${mastered.size} already mastered ✓` : "");
+  showOnly("startCard");
+  el.progress.style.width = "0%";
+}
+
+function showResumePrompt() {
+  showStart();
+  el.availableInfo.textContent = "Saved test found — resume below, or pick a size above for a fresh start.";
+  if (!document.getElementById("resumeBtn")) {
+    const b = document.createElement("button");
+    b.id = "resumeBtn"; b.className = "qz-btn"; b.type = "button";
+    b.textContent = "▶ Resume Saved Test";
+    b.addEventListener("click", resume);
+    el.resumeRow.appendChild(b);
+  }
+  el.resumeRow.classList.remove("qz-hidden");
+}
+
+function removeResumeBtn() {
+  const b = document.getElementById("resumeBtn");
+  if (b) b.remove();
+  el.resumeRow.classList.add("qz-hidden");
+}
+
+function showQuiz() { showOnly("quizCard"); render(); }
+
+function showResult() {
+  showOnly("resultCard");
+  const s = summary();
+  el.finalScore.textContent   = fmt(ts.score);
+  el.finalCorrect.textContent = s.correct;
+  el.finalWrong.textContent   = s.wrong;
+  el.finalSkipped.textContent = s.skipped;
+  el.progress.style.width     = "100%";
+  renderWrongReview();
+
+  // Update save score button state
+  const saveBtn = document.getElementById("saveScoreBtn");
+  if (saveBtn) saveBtn.disabled = false;
+}
+
+/* ── AFTER CSV LOADED ── */
+function afterLoaded() {
+  const saved = loadState();
+  if (!saved) { showStart(); return; }
+  if (saved.ended) { ts = saved; showResult(); return; }
+  if (saved.history && saved.cap > 0) { ts = saved; showResumePrompt(); return; }
+  showStart();
+}
+
+/* ── START / RESUME TEST ── */
+function startFresh(szKey, selectedSubtopics) {
+  const mastered = getMastered();
+  const pool = shuffle(allQ.filter(q =>
+    !mastered.has(q.pk) &&
+    (selectedSubtopics ? selectedSubtopics.includes(q.subtopic) : true)
+  ));
+
+  if (!pool.length) {
+    alert("No questions available for the selected subjects! Clear progress to restart.");
+    return;
+  }
+
+  const cap      = resolveSize(szKey, pool.length);
+  const selected = pool.slice(0, cap);
+
+  ts = {
+    cap,
+    history     : [selected[0].id],
+    queue       : selected.slice(1).map(q => q.id),
+    current     : 0,
+    answers     : {},
+    score       : 0,
+    ended       : false
+  };
+
+  saveQuizState(); showQuiz();
+}
+
+function resolveSize(key, max) {
+  const n = parseInt(key, 10);
+  return (!isNaN(n) && n > 0) ? Math.min(n, max) : max;
+}
+
+function resume() {
+  const saved = loadState();
+  if (!saved) { showStart(); return; }
+  ts = saved;
+  if (ts.ended) { showResult(); return; }
+  showQuiz();
+}
+
+/* ── RENDER QUESTION ── */
+function render() {
+  if (!ts) return;
+
+  const qId      = ts.history[ts.current];
+  const question = byId(qId);
+  if (!question) { el.qText.textContent = "⚠ Question data not found."; return; }
+
+  const ans      = ts.answers[ts.current] || null;
+  const isLocked = Boolean(ans);
+  const chosen   = ans ? ans.chosen : "";
+  const atTail   = ts.current === ts.history.length - 1;
+
+  const doneCount = Object.keys(ts.answers).length;
+  el.qNumber.textContent  = `${ts.current + 1} / ${ts.cap}`;
+  el.score.textContent    = fmt(ts.score);
+  el.answered.textContent = doneCount;
+  el.left.textContent     = Math.max(ts.cap - doneCount, 0);
+  el.progress.style.width = `${(doneCount / ts.cap) * 100}%`;
+  el.qText.textContent    = question.question;
+
+  el.opts.innerHTML = "";
+  const KEYS = ["A","B","C","D"];
+  KEYS.forEach((key, idx) => {
+    const oid   = `o_${key}`;
+    const label = document.createElement("label");
+    label.className = "option-item";
+    label.setAttribute("for", oid);
+
+    const radio = document.createElement("input");
+    radio.type     = "radio";
+    radio.name     = "opt";
+    radio.id       = oid;
+    radio.value    = key;
+    radio.checked  = (chosen === key);
+    radio.disabled = isLocked;
+
+    if (!isLocked) {
+      radio.addEventListener("change", () => {
+        el.opts.querySelectorAll(".option-item").forEach(l => l.classList.remove("selected"));
+        label.classList.add("selected");
+      });
+    }
+
+    if (isLocked) {
+      label.classList.add("locked");
+      if (ans.result === "correct") {
+        if (key === chosen) label.classList.add("is-correct-chosen");
+      } else if (ans.result === "wrong") {
+        if (key === chosen)                 label.classList.add("is-wrong-chosen");
+        if (key === question.correctOption) label.classList.add("is-right-answer");
+      }
+    } else {
+      if (key === chosen) label.classList.add("selected");
+    }
+
+    const keySpan  = document.createElement("span");
+    keySpan.className   = "option-key";
+    keySpan.textContent = `${idx + 1}.`;
+
+    const txtSpan  = document.createElement("span");
+    txtSpan.className   = "option-text";
+    txtSpan.textContent = question[`opt${key}`];
+
+    label.appendChild(radio);
+    label.appendChild(keySpan);
+    label.appendChild(txtSpan);
+    el.opts.appendChild(label);
+  });
+
+  el.feedback.className = "";
+  if (isLocked) {
+    if (ans.result === "correct") {
+      el.feedback.className = "correct";
+      el.feedback.textContent = "✓ Correct! +2 points";
+    } else if (ans.result === "wrong") {
+      const correctText = question[`opt${question.correctOption}`];
+      el.feedback.className = "wrong";
+      el.feedback.textContent = `✗ Wrong  −0.5 pts · Correct answer: ${question.correctOption}. ${correctText}`;
+    } else {
+      el.feedback.className = "skipped";
+      el.feedback.textContent = "— Skipped · 0 points · This question will appear in your next quiz.";
+    }
+  }
+
+  el.prevBtn.disabled = (ts.current === 0);
+
+  const allDone = doneCount >= ts.cap;
+
+  if (allDone && atTail && isLocked) {
+    el.nextBtn.textContent = "View Results →";
+    el.nextBtn.disabled    = false;
+    el.smallNote.textContent = `All ${ts.cap} questions answered! Click View Results.`;
+  } else if (!atTail) {
+    el.nextBtn.textContent = "Next →";
+    el.nextBtn.disabled    = false;
+    el.smallNote.textContent = "Viewing a past question. Click Next to return to current.";
+  } else if (isLocked) {
+    el.nextBtn.textContent = "Continue →";
+    el.nextBtn.disabled    = false;
+    el.smallNote.textContent = "Click Continue to go to the next question.";
+  } else {
+    el.nextBtn.textContent = "Save & Next";
+    el.nextBtn.disabled    = false;
+    el.smallNote.textContent = "Select an answer and click Save & Next, or click Save & Next without selecting to skip.";
+  }
+}
+
+/* ── NAVIGATION ── */
+function goPrev() {
+  if (!ts || ts.current === 0) return;
+  ts.current -= 1;
+  saveQuizState(); render();
+}
+
+function handleNext() {
+  if (!ts) return;
+
+  const atTail = ts.current === ts.history.length - 1;
+
+  if (!atTail) {
+    ts.current += 1;
+    saveQuizState(); render(); return;
+  }
+
+  const existingAns = ts.answers[ts.current];
+
+  if (!existingAns) {
+    const question = byId(ts.history[ts.current]);
+    if (!question) return;
+
+    const chosen = getChosen();
+    const result = !chosen                           ? "unattempted"
+                 : chosen === question.correctOption ? "correct"
+                 :                                    "wrong";
+
+    ts.answers[ts.current] = { id: question.id, chosen: chosen || "", result };
+    ts.score += SCORE_RULES[result];
+
+    if (result === "correct") {
+      const m = getMastered();
+      m.add(question.pk);
+      saveMastered(m);
+    }
+
+    saveQuizState();
+    render();
+    return;
+  }
+
+  const doneCount = Object.keys(ts.answers).length;
+  if (doneCount >= ts.cap) { submitTest(); return; }
+
+  if (ts.queue.length > 0 && ts.history.length < ts.cap) {
+    const nextId = ts.queue.shift();
+    ts.history.push(nextId);
+    ts.current = ts.history.length - 1;
+    saveQuizState(); render();
+  } else {
+    submitTest();
+  }
+}
+
+/* ── SUBMIT ── */
+function confirmSubmit() {
+  if (!ts) return;
+  const done      = Object.keys(ts.answers).length;
+  const remaining = ts.cap - done;
+  if (remaining > 0 && !confirm(`${remaining} question(s) not yet answered. Submit anyway?`)) return;
+  submitTest();
+}
+
+function submitTest() {
+  if (!ts) return;
+  ts.ended = true;
+  saveQuizState(); showResult();
+}
+
+/* ── SUMMARY & REVIEW ── */
+function summary() {
+  let correct = 0, wrong = 0, skipped = 0;
+  for (let i = 0; i < ts.cap; i++) {
+    const a = ts.answers[i];
+    if (!a || a.result === "unattempted") skipped++;
+    else if (a.result === "correct")      correct++;
+    else                                  wrong++;
+  }
+  return { correct, wrong, skipped };
+}
+
+function renderWrongReview() {
+  const wrongOnes = [];
+  for (let i = 0; i < ts.cap; i++) {
+    const a = ts.answers[i];
+    if (a && a.result === "wrong") {
+      const q = byId(a.id);
+      if (q) wrongOnes.push({ a, q, slot: i + 1 });
+    }
+  }
+
+  if (!wrongOnes.length) {
+    el.wrongReview.innerHTML = `<p class="no-wrong-msg">🎉 No wrong answers — excellent!</p>`;
+    return;
+  }
+
+  const html = [`<p class="review-header">✗ Wrong Answers Review (${wrongOnes.length})</p>`];
+  wrongOnes.forEach(({ a, q, slot }) => {
+    const chosenTxt  = a.chosen ? `${a.chosen}. ${q[`opt${a.chosen}`]}` : "—";
+    const correctTxt = `${q.correctOption}. ${q[`opt${q.correctOption}`]}`;
+    html.push(`
+      <div class="review-item">
+        <p class="review-q"><strong>Q${slot}.</strong> ${escHtml(q.question)}</p>
+        <p class="review-your-ans">✗ Your answer: ${escHtml(chosenTxt)}</p>
+        <p class="review-correct-ans">✓ Correct answer: ${escHtml(correctTxt)}</p>
+      </div>
+    `);
+  });
+  el.wrongReview.innerHTML = html.join("");
+}
+
+/* ── HELPERS ── */
+function getChosen() {
+  const el2 = document.querySelector("input[name='opt']:checked");
+  return el2 ? el2.value : "";
+}
+
+function byId(id) { return allQ.find(q => q.id === id); }
+
+function fmt(v) { return Number(v).toFixed(2).replace(/\.00$/, ""); }
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ── LOCAL STORAGE ── */
+function loadState()    { try { return JSON.parse(localStorage.getItem(K_STATE));    } catch { return null; } }
+function saveQuizState(){ localStorage.setItem(K_STATE, JSON.stringify(ts)); }
+function delState()     { localStorage.removeItem(K_STATE); ts = null; }
+function getMastered()  { try { return new Set(JSON.parse(localStorage.getItem(K_MASTERED)) || []); } catch { return new Set(); } }
+function saveMastered(s){ localStorage.setItem(K_MASTERED, JSON.stringify([...s])); }
+function delMastered()  { localStorage.removeItem(K_MASTERED); }
+
+/* ── CSV PARSER ── */
+function parseAndNormalize(text) {
+  const rows = [];
+  let cur = "", row = [], inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i + 1];
+    if (c === '"') {
+      if (inQ && n === '"') { cur += '"'; i++; } else inQ = !inQ; continue;
+    }
+    if (c === ',' && !inQ) { row.push(cur); cur = ""; continue; }
+    if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && n === '\n') i++;
+      row.push(cur); cur = "";
+      if (row.some(x => x.trim())) rows.push(row);
+      row = []; continue;
+    }
+    cur += c;
+  }
+  if (cur || row.length) { row.push(cur); if (row.some(x => x.trim())) rows.push(row); }
+  if (!rows.length) return [];
+
+  const hdrs = rows[0].map(h => h.trim());
+  const objs = rows.slice(1).map(cells => {
+    const o = {};
+    hdrs.forEach((h, i) => { o[h] = (cells[i] || "").trim(); });
+    return o;
+  });
+
+  return objs
+    .filter(r => r.Question && r.Option_A && r.Option_B && r.Option_C && r.Option_D)
+    .map((r, i) => ({
+      id           : `q_${i + 1}`,
+      question     : clean(r.Question),
+      subject      : clean(r.Subject),
+      subtopic     : clean(r.Subtopic),
+      optA         : clean(r.Option_A),
+      optB         : clean(r.Option_B),
+      optC         : clean(r.Option_C),
+      optD         : clean(r.Option_D),
+      correctOption: extractKey(r.Answer),
+      pk           : [r.Question, r.Option_A, r.Option_B, r.Option_C, r.Option_D].map(clean).join("||")
+    }))
+    .filter(q => ["A","B","C","D"].includes(q.correctOption));
+}
+
+function extractKey(v) {
+  const m = String(v || "").trim().toUpperCase().match(/[ABCD]/);
+  return m ? m[0] : "";
+}
+function clean(v) { return (v || "").toString().trim(); }
+
+/* ══════════════════════════════════════════════════════════
+   SAVE SCORE TO MOCK TESTS (NEW FEATURE)
+   ══════════════════════════════════════════════════════════ */
+function saveScoreToMockTests() {
+  if (!ts || !ts.ended) return;
+  const s = summary();
+  
+  const now = new Date();
+  const dateStr = [
+    now.getDate().toString().padStart(2, '0'),
+    (now.getMonth() + 1).toString().padStart(2, '0'),
+    now.getFullYear()
+  ].join('/');
+
+  const entry = {
+    name: "Auto-Generated Quiz",
+    date: dateStr,
+    total: ts.score,
+    max: ts.cap * 2,    // React expects the maximum POSSIBLE marks (each right answer is +2)
+    correct: s.correct,
+    wrong: s.wrong,
+    skip: s.skipped,
+    subs: {} // Global test, no strict subject division implemented here yet
+  };
+
+  let state = { mocks: [], conf: {}, checks: {} };
+  try { 
+    const raw = localStorage.getItem("ddcet26v2");
+    if (raw) Object.assign(state, JSON.parse(raw)); 
+  } catch {}
+
+  if (!state.mocks) state.mocks = [];
+  state.mocks.push(entry);
+  localStorage.setItem("ddcet26v2", JSON.stringify(state));
+
+  const btn = document.getElementById("saveScoreBtn");
+  if (btn) {
+    btn.textContent = "✓ Saved to Dashboard!";
+    btn.disabled = true;
+  }
+}
+
+</script>
+
+</body>
+</html>

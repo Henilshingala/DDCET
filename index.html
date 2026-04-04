@@ -434,15 +434,8 @@
 
       <!-- LOADER -->
       <section id="loaderCard" class="qz-card">
-        <h2>Upload MCQ Bank</h2>
-        <p id="loadStatus">Upload your generated CSV file to begin.</p>
-        <div class="qz-row">
-          <button id="pickFileBtn" class="qz-btn secondary">Choose CSV File</button>
-          <input id="csvFileInput" type="file" accept=".csv" hidden />
-        </div>
-        <p class="hint" style="margin-top:12px">
-          Required columns: <code>Subject, Subtopic, Q_No, Difficulty, Question, Option_A, Option_B, Option_C, Option_D, Answer</code>
-        </p>
+        <h2>Loading MCQ Bank</h2>
+        <p id="loadStatus">Fetching questions from the server, please wait...</p>
       </section>
 
       <!-- START -->
@@ -768,6 +761,11 @@ function App() {
     alert("All your data has been successfully cleared.");
   };
 
+  const deleteMock = (index) => {
+    if(!confirm("Are you sure you want to delete this mock test?")) return;
+    setMocks(mocks.filter((_, i) => i !== index));
+  };
+
   /* ── marking scheme: +2 correct, -0.5 wrong, 0 skip ── */
   const calcScore = (correct, wrong) => parseFloat(((correct||0)*2 - (wrong||0)*0.5).toFixed(2));
 
@@ -1012,7 +1010,10 @@ function App() {
                         {mocks.map((m,i)=>{
                           if(m.absent) return (
                             <tr key={i} style={{borderBottom:"1px solid #0f172a",opacity:0.4}}>
-                              <td style={{padding:"7px 10px",color:"#64748b"}}>{m.name}</td>
+                              <td style={{padding:"7px 10px",color:"#64748b"}}>
+                                <button onClick={()=>deleteMock(i)} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,color:"#ef4444",marginRight:6}} title="Delete test">🗑️</button>
+                                {m.name}
+                              </td>
                               <td style={{padding:"7px 10px",color:"#374151",...C.mono}}>{m.date||"—"}</td>
                               <td colSpan={8} style={{padding:"7px 10px",color:"#475569",fontSize:11}}>Absent</td>
                             </tr>
@@ -1025,7 +1026,10 @@ function App() {
                           const mismatch = calc!==null && Math.abs(calc-m.total)>0.6;
                           return (
                             <tr key={i} style={{borderBottom:"1px solid #0f172a",background:i%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
-                              <td style={{padding:"7px 10px",color:"#e2e8f0",fontWeight:600}}>{m.name}</td>
+                              <td style={{padding:"7px 10px",color:"#e2e8f0",fontWeight:600}}>
+                                <button onClick={()=>deleteMock(i)} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,color:"#ef4444",marginRight:6}} title="Delete test">🗑️</button>
+                                {m.name}
+                              </td>
                               <td style={{padding:"7px 10px",color:"#64748b",...C.mono,whiteSpace:"nowrap"}}>{m.date||"—"}</td>
                               <td style={{padding:"7px 10px",...C.mono,fontWeight:700,color:col}}>{m.total}</td>
                               <td style={{padding:"7px 10px",color:"#374151",...C.mono}}>{m.max}</td>
@@ -1230,11 +1234,14 @@ function App() {
               return (
                 <div key={i} style={{...C.card,marginBottom:8,opacity:m.absent?0.45:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
-                    <div>
-                      <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>{m.name}</div>
-                      <div style={{fontSize:11,color:"#475569",marginTop:2}}>
-                        {m.date||"No date"}
-                        {m.correct!==undefined&&!m.absent&&` · ✅ ${m.correct} correct · ❌ ${m.wrong} wrong · ⭕ ${m.skip} skipped`}
+                    <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                      <button onClick={()=>deleteMock(i)} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:16,color:"#ef4444",padding:0,marginTop:0,lineHeight:1}} title="Delete test">🗑️</button>
+                      <div>
+                        <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>{m.name}</div>
+                        <div style={{fontSize:11,color:"#475569",marginTop:2}}>
+                          {m.date||"No date"}
+                          {m.correct!==undefined&&!m.absent&&` · ✅ ${m.correct} correct · ❌ ${m.wrong} wrong · ⭕ ${m.skip} skipped`}
+                        </div>
                       </div>
                     </div>
                     <div style={{textAlign:"right"}}>
@@ -1436,8 +1443,6 @@ const el = {
   quizCard     : document.getElementById("quizCard"),
   resultCard   : document.getElementById("resultCard"),
   loadStatus   : document.getElementById("loadStatus"),
-  pickFileBtn  : document.getElementById("pickFileBtn"),
-  csvFileInput : document.getElementById("csvFileInput"),
   availableInfo: document.getElementById("availableInfo"),
   resumeRow    : document.getElementById("resumeRow"),
   qNumber      : document.getElementById("questionNumber"),
@@ -1466,22 +1471,28 @@ quizInit();
 
 function quizInit() {
   bindEvents();
-  showLoader("Please upload your MCQ Bank CSV file to begin.");
+  fetchMCQBank();
+}
+
+async function fetchMCQBank() {
+  showLoader("Fetching MCQ database...");
+  try {
+    const res = await fetch("https://raw.githubusercontent.com/Henilshingala/DDCET/main/DDCET_Full_MCQ_Bank.csv");
+    if (!res.ok) throw new Error("Network response was not ok");
+    const text = await res.text();
+    const qs = parseAndNormalize(text);
+    if (!qs.length) { el.loadStatus.textContent = "No valid rows found in the CSV."; return; }
+    allQ = qs;
+    el.loadStatus.textContent = `Loaded ${allQ.length} questions successfully.`;
+    afterLoaded();
+  } catch (err) {
+    el.loadStatus.textContent = "Failed to load MCQ Bank. Please check your internet connection and reload.";
+    console.error(err);
+  }
 }
 
 /* ── EVENTS ── */
 function bindEvents() {
-  el.pickFileBtn.addEventListener("click", () => el.csvFileInput.click());
-  el.csvFileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const qs = parseAndNormalize(await file.text());
-    if (!qs.length) { el.loadStatus.textContent = "No valid rows found in that CSV."; return; }
-    allQ = qs;
-    el.loadStatus.textContent = `Loaded ${allQ.length} questions from ${file.name}.`;
-    afterLoaded();
-  });
-
   document.querySelectorAll("[data-sz]").forEach(b =>
     b.addEventListener("click", () => { removeResumeBtn(); showSubjectSelection(b.dataset.sz); })
   );

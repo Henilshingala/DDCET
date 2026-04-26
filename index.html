@@ -8,6 +8,144 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <!-- ═══ COOKIE HELPERS + TARGET INIT ═══ -->
+  <script>
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+      document.cookie = name + "=" + value + ";expires=" + d.toUTCString() + ";path=/;SameSite=Lax";
+    }
+    function getCookie(name) {
+      const n = name + "=";
+      for (let c of document.cookie.split(';')) {
+        c = c.trim();
+        if (c.startsWith(n)) return c.substring(n.length);
+      }
+      return null;
+    }
+    // Expose target to React before render
+    const _savedTarget = getCookie("ddcet_target");
+    window.USER_TARGET = _savedTarget ? parseInt(_savedTarget, 10) : null;
+  </script>
+
+  <!-- ═══ POPUP STYLES ═══ -->
+  <style>
+    #targetPopupOverlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: fadeInOverlay .3s ease;
+    }
+    @keyframes fadeInOverlay { from{opacity:0} to{opacity:1} }
+    #targetPopupBox {
+      background: #0d1117;
+      border: 1px solid #f59e0b44;
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 480px; width: 100%;
+      box-shadow: 0 0 60px rgba(245,158,11,0.15), 0 20px 60px rgba(0,0,0,0.6);
+      animation: slideUp .4s cubic-bezier(.16,1,.3,1);
+      text-align: center;
+    }
+    @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+    #targetPopupBox .popup-badge {
+      display: inline-block;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: #f59e0b;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 99px;
+      margin-bottom: 18px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    #targetPopupBox h2 {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: #f1f5f9; margin-bottom: 8px; line-height: 1.3;
+    }
+    #targetPopupBox .popup-sub {
+      font-size: 13px; color: #64748b; margin-bottom: 28px; line-height: 1.6;
+    }
+    #targetPopupBox .popup-sub strong { color: #94a3b8; }
+    .target-display-wrap {
+      margin-bottom: 20px;
+    }
+    .target-big-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 64px; font-weight: 700;
+      line-height: 1;
+      color: #f59e0b;
+      text-shadow: 0 0 30px rgba(245,158,11,0.4);
+      transition: color .2s;
+    }
+    .target-big-num.low  { color: #ef4444; text-shadow: 0 0 30px rgba(239,68,68,0.3); }
+    .target-big-num.mid  { color: #f59e0b; text-shadow: 0 0 30px rgba(245,158,11,0.3); }
+    .target-big-num.good { color: #3b82f6; text-shadow: 0 0 30px rgba(59,130,246,0.3); }
+    .target-big-num.high { color: #22c55e; text-shadow: 0 0 30px rgba(34,197,94,0.3); }
+    .target-out-of { font-size: 14px; color: #475569; margin-top: 2px; font-family:'IBM Plex Mono',monospace; }
+    .target-label-pill {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 12px; border-radius: 99px;
+      transition: background .2s, color .2s;
+    }
+    #targetSlider {
+      -webkit-appearance: none;
+      width: 100%; height: 6px;
+      border-radius: 99px;
+      background: linear-gradient(to right, #f59e0b var(--pct,60%), #1e293b var(--pct,60%));
+      outline: none; cursor: pointer;
+      margin: 16px 0 6px;
+    }
+    #targetSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f59e0b;
+      border: 3px solid #0d1117;
+      box-shadow: 0 0 0 2px #f59e0b55;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    #targetSlider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    #targetSlider::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f59e0b;
+      border: 3px solid #0d1117;
+      cursor: pointer;
+    }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 11px; color: #374151; font-family:'IBM Plex Mono',monospace; margin-bottom: 20px; }
+    .popup-info-row {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+      margin-bottom: 24px;
+    }
+    .popup-info-cell {
+      background: #07090f;
+      border: 1px solid #1e293b;
+      border-radius: 10px; padding: 10px 8px;
+    }
+    .popup-info-cell .pic-val { font-size: 15px; font-weight: 700; color: #e2e8f0; font-family:'IBM Plex Mono',monospace; }
+    .popup-info-cell .pic-lbl { font-size: 10px; color: #475569; margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
+    #popupGoBtn {
+      width: 100%; padding: 14px;
+      background: #f59e0b; color: #000;
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family:'IBM Plex Sans',sans-serif;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+    }
+    #popupGoBtn:hover { background: #fbbf24; transform: translateY(-1px); box-shadow: 0 6px 25px rgba(245,158,11,0.45); }
+    #popupGoBtn:active { transform: translateY(0); }
+    .popup-note { font-size: 11px; color: #374151; margin-top: 12px; line-height: 1.6; }
+  </style>
+
   <style id="quiz-styles">
 /* ═══════════════════════════════════════════════════
    QUIZ MODULE STYLES — scoped to #testKnowledgeSection
@@ -133,9 +271,54 @@
     .main-nav .nav-brand span{font-size:16px;font-weight:700;color:#f59e0b;letter-spacing:1px;}
     .app-section{display:none;}
     .app-section.visible{display:block;}
+
+    /* Change target button */
+    #changeTargetBtn {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: #f59e0b;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 6px;
+      cursor: pointer; font-family:'IBM Plex Mono',monospace;
+      letter-spacing: .5px; transition: background .2s;
+      margin-left: 6px; vertical-align: middle;
+    }
+    #changeTargetBtn:hover { background: rgba(245,158,11,0.2); }
   </style>
 </head>
 <body>
+
+<!-- ═══ FIRST-TIME TARGET POPUP ═══ -->
+<div id="targetPopupOverlay" style="display:none;">
+  <div id="targetPopupBox">
+    <div class="popup-badge">🎯 DDCET 2026 · GTU</div>
+    <h2>What's your target score?</h2>
+    <p class="popup-sub">
+      Set your goal and we'll show you <strong>exactly</strong> what you need to achieve it.<br>
+      100 questions · +2 correct · −0.5 wrong · 0 skipped
+    </p>
+
+    <div class="target-display-wrap">
+      <div class="target-big-num mid" id="popupTargetNum">150</div>
+      <div class="target-out-of">out of 200</div>
+      <div>
+        <span class="target-label-pill" id="popupTargetPill" style="background:rgba(245,158,11,0.15);color:#f59e0b;">Good Target</span>
+      </div>
+    </div>
+
+    <input type="range" id="targetSlider" min="60" max="200" value="150" step="1" />
+    <div class="slider-labels">
+      <span>60</span><span>100</span><span>140</span><span>175</span><span>200</span>
+    </div>
+
+    <div class="popup-info-row" id="popupInfoRow">
+      <!-- filled by JS -->
+    </div>
+
+    <button id="popupGoBtn">🚀 Set My Target &amp; Start</button>
+    <p class="popup-note">Saved permanently in your browser · You can change it anytime via the ✏️ button</p>
+  </div>
+</div>
 
 <!-- ═══ TOP NAVIGATION ═══ -->
 <nav class="main-nav">
@@ -178,7 +361,7 @@
       </p>
     </section>
     <section id="subjectCard" class="qz-card qz-hidden">
-      <h2>Select Subjects & Topics</h2>
+      <h2>Select Subjects &amp; Topics</h2>
       <p class="hint">Choose subjects for your <strong id="chosenSizeDisplay"></strong> question test, then fine-tune subtopics below.</p>
       <h3 style="font-size:14px;margin-top:10px;margin-bottom:4px;color:#e2e8f0">Subjects</h3>
       <div id="subjectCardsContainer" class="subject-cards"></div>
@@ -207,7 +390,7 @@
       <div class="nav-row">
         <div class="nav-left">
           <button id="prevBtn" class="qz-btn secondary" type="button">← Prev</button>
-          <button id="nextBtn" class="qz-btn" type="button">Save & Next</button>
+          <button id="nextBtn" class="qz-btn" type="button">Save &amp; Next</button>
         </div>
         <div class="nav-right">
           <button id="submitBtn" class="qz-btn danger" type="button">Submit Test</button>
@@ -247,9 +430,94 @@
   }
 </script>
 
+<!-- ═══ POPUP LOGIC ═══ -->
+<script>
+(function() {
+  const TOTAL_QS = 100;
+  const MAX_MARKS = 200; // 100 × 2
+  const overlay  = document.getElementById('targetPopupOverlay');
+  const slider   = document.getElementById('targetSlider');
+  const numEl    = document.getElementById('popupTargetNum');
+  const pillEl   = document.getElementById('popupTargetPill');
+  const infoRow  = document.getElementById('popupInfoRow');
+  const goBtn    = document.getElementById('popupGoBtn');
+
+  function scoreLabel(t) {
+    if (t >= 185) return { text:'🏆 Elite Target',   bg:'rgba(34,197,94,0.15)',  col:'#22c55e' };
+    if (t >= 175) return { text:'🎯 Excellent Target', bg:'rgba(34,197,94,0.12)', col:'#22c55e' };
+    if (t >= 155) return { text:'👍 Good Target',     bg:'rgba(59,130,246,0.15)', col:'#3b82f6' };
+    if (t >= 130) return { text:'📈 Safe Target',     bg:'rgba(245,158,11,0.15)', col:'#f59e0b' };
+    if (t >= 100) return { text:'⚡ Starter Target',  bg:'rgba(245,158,11,0.12)', col:'#f59e0b' };
+    return           { text:'⚠️ Low Target',          bg:'rgba(239,68,68,0.12)', col:'#ef4444' };
+  }
+
+  function numClass(t) {
+    if (t >= 175) return 'target-big-num high';
+    if (t >= 155) return 'target-big-num good';
+    if (t >= 120) return 'target-big-num mid';
+    return 'target-big-num low';
+  }
+
+  // min correct needed for given wrong count
+  function minCorrect(target, wrong) {
+    return Math.ceil((target + wrong * 0.5) / 2);
+  }
+
+  function updatePopup(t) {
+    numEl.textContent = t;
+    numEl.className   = numClass(t);
+
+    const lbl = scoreLabel(t);
+    pillEl.textContent = lbl.text;
+    pillEl.style.background = lbl.bg;
+    pillEl.style.color = lbl.col;
+
+    // Update slider gradient
+    const pct = ((t - 60) / (200 - 60)) * 100;
+    slider.style.setProperty('--pct', pct + '%');
+    slider.style.background = `linear-gradient(to right, ${lbl.col} ${pct}%, #1e293b ${pct}%)`;
+    slider.style.setProperty('--thumb-col', lbl.col);
+
+    // Info: correct needed if 0 wrong, 10 wrong, 20 wrong
+    const scenarios = [
+      { wrong: 0,  label: '0 wrong' },
+      { wrong: 10, label: '10 wrong' },
+      { wrong: 20, label: '20 wrong' },
+    ];
+    infoRow.innerHTML = scenarios.map(s => {
+      const c = minCorrect(t, s.wrong);
+      const ok = (c + s.wrong) <= TOTAL_QS && c <= TOTAL_QS;
+      const col = ok ? '#22c55e' : '#ef4444';
+      const val = ok ? c + ' correct' : '✗ Not achievable';
+      return `<div class="popup-info-cell">
+        <div class="pic-val" style="color:${col}">${val}</div>
+        <div class="pic-lbl">If ${s.label}</div>
+      </div>`;
+    }).join('');
+  }
+
+  slider.addEventListener('input', () => updatePopup(parseInt(slider.value, 10)));
+  updatePopup(150);
+
+  goBtn.addEventListener('click', () => {
+    const t = parseInt(slider.value, 10);
+    setCookie('ddcet_target', t, 3650); // 10 years
+    window.USER_TARGET = t;
+    overlay.style.display = 'none';
+    // Notify React to re-render with new target
+    if (window.__setReactTarget) window.__setReactTarget(t);
+  });
+
+  // Show popup only if no cookie
+  if (!getCookie('ddcet_target')) {
+    overlay.style.display = 'flex';
+  }
+})();
+</script>
+
 <!-- ═══ PREDICTOR DASHBOARD (React) ═══ -->
 <script type="text/babel">
-const { useState, useEffect, useMemo } = React;
+const { useState, useEffect, useMemo, useCallback } = React;
 
 /* ── CHAPTERS — all 23 DDCET topics with their actual marks ── */
 const CHAPTERS = [
@@ -287,6 +555,8 @@ const SUB_SUBJECTS = [
   {key:"env",  label:"Environment",  max:10},
 ];
 
+const TOTAL_QS = 100; // fixed: 100 questions, 2 marks each
+
 /* ── STORAGE ── */
 const KEY = "ddcet26v2";
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)||"{}"); } catch { return {}; } };
@@ -301,12 +571,20 @@ const parseDate = str => {
   const m={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
   return m[mon]!==undefined ? new Date(2026,m[mon],parseInt(day)) : null;
 };
-/* Exam date: 5 May 2026 */
 const getDaysLeft = () => Math.max(0, Math.ceil((new Date(2026,4,5) - new Date()) / 86400000));
-const scoreColor  = s => s>=175?"#22c55e":s>=155?"#3b82f6":s>=130?"#f59e0b":"#ef4444";
+const scoreColor  = (s, tgt) => {
+  const t = tgt || 175;
+  if (s >= t)           return "#22c55e";
+  if (s >= t * 0.886)   return "#3b82f6";
+  if (s >= t * 0.743)   return "#f59e0b";
+  return "#ef4444";
+};
 const sortMocks   = arr => [...arr].sort((a,b)=>{const da=parseDate(a.date),db=parseDate(b.date);if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;return db-da;});
 const calcScore   = (correct,wrong) => parseFloat(((correct||0)*2-(wrong||0)*0.5).toFixed(2));
 const todayStr    = () => {const d=new Date();return[d.getDate().toString().padStart(2,'0'),(d.getMonth()+1).toString().padStart(2,'0'),d.getFullYear()].join('/');};
+
+// min correct to reach target given wrong count
+const minCorrect = (target, wrong) => Math.ceil((target + wrong * 0.5) / 2);
 
 /* ── INLINE STYLES ── */
 const C = {
@@ -321,17 +599,26 @@ const C = {
 };
 const fill = (w,col) => ({height:"100%",width:w,background:col,borderRadius:99,transition:"width .3s"});
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    APP
-   ═══════════════════════════════════════════ */
+   ═══════════════════════════════════════ */
 function App() {
   const stored = load();
   const [tab,      setTab]   = useState("predictor");
   const [mocks,    setMocks] = useState(() => stored.mocks?.length ? stored.mocks : []);
   const [showForm, setShowF] = useState(false);
-  const [mockMode, setMMode] = useState("total"); // "total" | "subject" | "chapter"
+  const [mockMode, setMMode] = useState("total");
   const [form,     setForm]  = useState(blankForm());
   const [daysLeft, setDL]    = useState(getDaysLeft());
+
+  // Dynamic target from cookie/popup
+  const [userTarget, setUserTarget] = useState(() => window.USER_TARGET || 175);
+
+  // Expose setter to popup
+  useEffect(() => {
+    window.__setReactTarget = (t) => setUserTarget(t);
+    return () => { delete window.__setReactTarget; };
+  }, []);
 
   useEffect(()=>{ save({mocks}); }, [mocks]);
   useEffect(()=>{ const t=setInterval(()=>setDL(getDaysLeft()),60000); return ()=>clearInterval(t); },[]);
@@ -358,19 +645,26 @@ function App() {
     setMocks(mocks.filter((_,idx)=>idx!==i));
   };
 
+  const openTargetPopup = () => {
+    const overlay = document.getElementById('targetPopupOverlay');
+    const slider  = document.getElementById('targetSlider');
+    if (overlay && slider) {
+      slider.value = userTarget;
+      // trigger update
+      slider.dispatchEvent(new Event('input'));
+      overlay.style.display = 'flex';
+    }
+  };
+
   /* ── Add mock handler ── */
   const addMock = () => {
     let total, max, extraFields={};
-
     if (mockMode==="total") {
-      /* Manual total */
-      total = parseFloat(form.total);
-      max   = parseFloat(form.max);
+      total = parseFloat(form.total); max = parseFloat(form.max);
       if (isNaN(total)||isNaN(max)||total<0||total>max){ alert("Enter a valid score."); return; }
       const c=form.correct!==""?parseInt(form.correct):undefined;
       const w=form.wrong!==  ""?parseInt(form.wrong)  :undefined;
       const sk=form.skip!== ""?parseInt(form.skip)    :undefined;
-      /* If correct+wrong given, recalculate total using +2/−0.5 */
       if (c!==undefined && w!==undefined) { total=calcScore(c,w); max=200; }
       if (c !==undefined) extraFields.correct=c;
       if (w !==undefined) extraFields.wrong=w;
@@ -395,13 +689,11 @@ function App() {
       if (sk!==undefined) extraFields.skip=sk;
     }
     else if (mockMode==="chapter") {
-      /* Chapter-wise quiz */
       if (!form.chapterName){ alert("Select a chapter."); return; }
       const obtained = parseFloat(form.chapterObtained);
       const chapMax  = parseFloat(form.chapterMax);
       if (isNaN(obtained)||isNaN(chapMax)||obtained<0||obtained>chapMax){ alert(`Enter obtained marks (0–${chapMax}).`); return; }
-      total = obtained;
-      max   = chapMax;
+      total = obtained; max = chapMax;
       const c=form.correct!==""?parseInt(form.correct):undefined;
       const w=form.wrong!==  ""?parseInt(form.wrong)  :undefined;
       const sk=form.skip!=="" ?parseInt(form.skip)    :undefined;
@@ -410,15 +702,12 @@ function App() {
       if (sk!==undefined) extraFields.skip=sk;
       extraFields.chapter = form.chapterName;
       extraFields.type    = "chapter";
-      /* auto-name if blank */
       if (!form.name) form.name = "Chapter Quiz: " + form.chapterName;
     }
-
     const entry = {
       name : form.name || (mockMode==="chapter" ? "Chapter Quiz: "+form.chapterName : "Mock Test"),
       date : form.date || todayStr(),
-      total, max,
-      ...extraFields,
+      total, max, ...extraFields,
     };
     setMocks(sortMocks([...mocks, entry]));
     setShowF(false);
@@ -426,14 +715,32 @@ function App() {
   };
 
   const TABS=[{id:"predictor",label:"📈 Predictor"},{id:"mock",label:"📋 Mock Tests"},{id:"settings",label:"⚙️ Settings"}];
-
   const clearAll = () => {
     if (!confirm("⚠️ Delete all mock test data? This cannot be undone.")) return;
     setMocks([]);
   };
-
-  /* ── Selected chapter details ── */
   const selectedChapter = CHAPTERS.find(c=>c.name===form.chapterName) || null;
+
+  // ── Dynamic "How to Score" scenarios based on userTarget ──
+  const howToScoreRows = [0, 5, 10, 15, 20].map(wrong => {
+    const correct = minCorrect(userTarget, wrong);
+    const score   = correct * 2 - wrong * 0.5;
+    const feasible = (correct + wrong) <= TOTAL_QS && correct <= TOTAL_QS && correct > 0;
+    return { wrong, correct, score, feasible };
+  });
+
+  // ── Subject-wise targets scaled from userTarget ──
+  const subjectTargets = [
+    {sub:"Physics",     max:60, note:"5 chapters × 12 marks each"},
+    {sub:"English",     max:50, note:"Grammar + comprehension focus"},
+    {sub:"Math",        max:50, note:"Calculus + Matrices = 24 marks"},
+    {sub:"Chemistry",   max:20, note:"Acids & Salts easiest to score"},
+    {sub:"Computer",    max:10, note:"MS Office — near free marks"},
+    {sub:"Environment", max:10, note:"Pollution, ecosystems recall"},
+  ].map(s => ({
+    ...s,
+    need: Math.round(userTarget / 200 * s.max),
+  }));
 
   return (
     <div style={{minHeight:"100vh",background:"#07090f"}}>
@@ -442,13 +749,17 @@ function App() {
       <div style={{background:"#0d1117",borderBottom:"1px solid #1e293b",padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
         <div>
           <div style={{fontSize:10,color:"#475569",letterSpacing:3,textTransform:"uppercase",...C.mono}}>GTU · DDCET 2026 · Engineering</div>
-          <div style={{fontSize:19,fontWeight:700,color:"#fff",marginTop:3}}>Score Predictor — Target: 175/200</div>
+          <div style={{fontSize:19,fontWeight:700,color:"#fff",marginTop:3}}>
+            Score Predictor — Target: {userTarget}/200
+            <button id="changeTargetBtn" onClick={openTargetPopup} title="Change target">✏️ Change</button>
+          </div>
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           {[
             {label:"Exam Date",  val:"5 May 2026",  color:"#e2e8f0"},
             {label:"Days Left",  val:daysLeft,       color:"#f59e0b"},
-            {label:"Predicted",  val:prediction!==null?prediction:"—", color:prediction!==null?scoreColor(prediction):"#64748b"},
+            {label:"Target",     val:userTarget+"/200", color:"#22c55e"},
+            {label:"Predicted",  val:prediction!==null?prediction:"—", color:prediction!==null?scoreColor(prediction, userTarget):"#64748b"},
           ].map(s=>(
             <div key={s.label} style={{background:"#07090f",border:"1px solid #1e293b",borderRadius:8,padding:"7px 14px",textAlign:"center",minWidth:80}}>
               <div style={{fontSize:s.label==="Exam Date"?13:20,fontWeight:700,color:s.color,...C.mono}}>{s.val}</div>
@@ -480,6 +791,7 @@ function App() {
           const avg     = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
           const latest  = scores[0] || 0;
           const trend   = scores.length>=2 ? scores[0]-scores[1] : null;
+          const tgtPct  = (userTarget/200*100).toFixed(1);
 
           return (
             <div>
@@ -498,22 +810,22 @@ function App() {
                 <div style={{...C.card,marginBottom:14,display:"flex",alignItems:"center",gap:32,flexWrap:"wrap",padding:"24px"}}>
                   <div style={{textAlign:"center",minWidth:120}}>
                     <div style={{fontSize:11,color:"#475569",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Predicted Score</div>
-                    <div style={{fontSize:72,fontWeight:700,color:scoreColor(prediction),lineHeight:1,...C.mono}}>{prediction}</div>
+                    <div style={{fontSize:72,fontWeight:700,color:scoreColor(prediction,userTarget),lineHeight:1,...C.mono}}>{prediction}</div>
                     <div style={{fontSize:13,color:"#475569",marginTop:4}}>out of 200</div>
                   </div>
                   <div style={{flex:1,minWidth:220}}>
                     <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:6}}>
-                      <span style={{color:"#64748b"}}>Progress toward target (175)</span>
-                      <span style={{...C.mono,fontWeight:700,color:prediction>=175?"#22c55e":"#f59e0b"}}>
-                        {prediction>=175?"✓ TARGET MET":`Need ${175-prediction} more marks`}
+                      <span style={{color:"#64748b"}}>Progress toward target ({userTarget})</span>
+                      <span style={{...C.mono,fontWeight:700,color:prediction>=userTarget?"#22c55e":"#f59e0b"}}>
+                        {prediction>=userTarget?"✓ TARGET MET":`Need ${userTarget-prediction} more marks`}
                       </span>
                     </div>
                     <div style={C.bar}>
-                      <div style={fill(`${Math.min(100,prediction/200*100)}%`,scoreColor(prediction))} />
-                      {/* Target marker at 87.5% */}
-                      <div style={{position:"absolute",left:"87.5%",top:0,bottom:0,width:2,background:"#ffffff44"}} />
+                      <div style={fill(`${Math.min(100,prediction/200*100)}%`,scoreColor(prediction,userTarget))} />
+                      {/* Target marker */}
+                      <div style={{position:"absolute",left:`${tgtPct}%`,top:0,bottom:0,width:2,background:"#ffffff44"}} />
                     </div>
-                    <div style={{fontSize:10,color:"#374151",marginTop:3}}>Target line at 175 marks (87.5%)</div>
+                    <div style={{fontSize:10,color:"#374151",marginTop:3}}>Target line at {userTarget} marks ({tgtPct}%)</div>
                     <div style={{marginTop:14,fontSize:12,color:"#475569",lineHeight:1.7}}>
                       Prediction formula: <span style={{color:"#f59e0b",fontWeight:600}}>60% recent 3 scores</span> + <span style={{color:"#3b82f6",fontWeight:600}}>25% overall avg</span> + <span style={{color:"#22c55e",fontWeight:600}}>15% best score</span>.<br/>
                       Add more tests for a more accurate prediction.
@@ -526,7 +838,7 @@ function App() {
               {valid.length>0 && (
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginBottom:14}}>
                   {[
-                    {label:"Latest",   val:latest+"/200",  color:scoreColor(latest)},
+                    {label:"Latest",   val:latest+"/200",  color:scoreColor(latest,userTarget)},
                     {label:"Best",     val:best+"/200",    color:"#22c55e"},
                     {label:"Average",  val:avg+"/200",     color:"#3b82f6"},
                     {label:"Tests",    val:valid.length,   color:"#94a3b8"},
@@ -548,7 +860,7 @@ function App() {
                   <div style={{display:"flex",alignItems:"flex-end",gap:6,height:80}}>
                     {[...scores].reverse().map((s,i)=>{
                       const pct = Math.min(100,s/200*100);
-                      const col = scoreColor(s);
+                      const col = scoreColor(s,userTarget);
                       return (
                         <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                           <div style={{fontSize:9,color:col,...C.mono,fontWeight:700}}>{s}</div>
@@ -560,49 +872,59 @@ function App() {
                       );
                     })}
                   </div>
-                  <div style={{marginTop:8,fontSize:10,color:"#374151"}}>Target: 175 &nbsp;·&nbsp; Green = ≥175 &nbsp;·&nbsp; Blue = ≥155 &nbsp;·&nbsp; Amber = ≥130 &nbsp;·&nbsp; Red = &lt;130</div>
+                  <div style={{marginTop:8,fontSize:10,color:"#374151"}}>Target: {userTarget} · Green = ≥{userTarget} · Blue = near target · Amber = needs work · Red = far from target</div>
                 </div>
               )}
 
-              {/* "What you need" on exam day */}
+              {/* ── HOW TO SCORE (DYNAMIC) ── */}
               <div style={{...C.card,background:"rgba(245,158,11,0.04)",borderColor:"rgba(245,158,11,0.15)",marginBottom:14}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:12}}>How to Score 175 on Exam Day</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}}>
-                  {[
-                    {wrong:0,  correct:88},
-                    {wrong:5,  correct:91},
-                    {wrong:10, correct:93},
-                    {wrong:15, correct:96},
-                    {wrong:20, correct:98},
-                  ].map(r=>{
-                    const s = r.correct*2 - r.wrong*0.5;
-                    return (
-                      <div key={r.wrong} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",border:"1px solid #1e293b"}}>
-                        <div style={{fontSize:12,color:"#64748b",marginBottom:4}}>If you get <span style={{color:"#ef4444",fontWeight:700}}>{r.wrong}</span> wrong</div>
-                        <div style={{fontSize:20,fontWeight:700,...C.mono,color:"#22c55e"}}>{r.correct} <span style={{fontSize:11,color:"#475569",fontWeight:400}}>correct needed</span></div>
-                        <div style={{fontSize:11,color:"#475569",marginTop:3}}>= {s} marks · Skip rest</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:12}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#f59e0b"}}>How to Score {userTarget} on Exam Day</div>
+                  <button onClick={openTargetPopup} style={{fontSize:11,padding:"4px 10px",borderRadius:6,border:"1px solid rgba(245,158,11,0.3)",background:"rgba(245,158,11,0.08)",color:"#f59e0b",cursor:"pointer",fontFamily:"IBM Plex Mono,monospace",fontWeight:700}}>
+                    ✏️ Change Target
+                  </button>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(165px,1fr))",gap:10}}>
+                  {howToScoreRows.map(r=>(
+                    <div key={r.wrong} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",border:"1px solid #1e293b"}}>
+                      <div style={{fontSize:12,color:"#64748b",marginBottom:4}}>
+                        If you get <span style={{color:"#ef4444",fontWeight:700}}>{r.wrong}</span> wrong
                       </div>
-                    );
-                  })}
+                      {r.feasible ? (
+                        <>
+                          <div style={{fontSize:20,fontWeight:700,...C.mono,color:"#22c55e"}}>
+                            {r.correct} <span style={{fontSize:11,color:"#475569",fontWeight:400}}>correct needed</span>
+                          </div>
+                          <div style={{fontSize:11,color:"#475569",marginTop:3}}>
+                            = {r.score % 1 === 0 ? r.score : r.score.toFixed(1)} marks · Skip rest
+                          </div>
+                          <div style={{fontSize:10,color:"#374151",marginTop:2}}>
+                            ({r.correct} + {r.wrong} = {r.correct+r.wrong} / {TOTAL_QS} Qs used)
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{fontSize:13,fontWeight:700,color:"#ef4444",marginTop:4}}>
+                          ✗ Not achievable<br/>
+                          <span style={{fontSize:11,fontWeight:400,color:"#64748b"}}>Too many wrong answers</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 <div style={{fontSize:11,color:"#475569",marginTop:12,lineHeight:1.6}}>
-                  Marking scheme: <span style={{color:"#22c55e",fontWeight:700}}>+2</span> correct &nbsp;·&nbsp; <span style={{color:"#ef4444",fontWeight:700}}>−0.5</span> wrong &nbsp;·&nbsp; <span style={{color:"#64748b"}}>0</span> skipped.<br/>
+                  Marking scheme: <span style={{color:"#22c55e",fontWeight:700}}>+2</span> correct &nbsp;·&nbsp;
+                  <span style={{color:"#ef4444",fontWeight:700}}>−0.5</span> wrong &nbsp;·&nbsp;
+                  <span style={{color:"#64748b"}}>0</span> skipped &nbsp;·&nbsp;
+                  <span style={{color:"#94a3b8"}}>100 questions total · Max 200 marks</span><br/>
                   Skip any question you are less than 70% confident about to protect your score.
                 </div>
               </div>
 
-              {/* Subject strategy */}
+              {/* Subject strategy (dynamic) */}
               <div style={{...C.card}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>Subject-wise Score Target (to reach 175)</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:12}}>Subject-wise Score Target (to reach {userTarget})</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:8}}>
-                  {[
-                    {sub:"Physics",      max:60, need:52, note:"5 chapters × 12 marks each"},
-                    {sub:"English",      max:50, need:44, note:"Grammar + comprehension focus"},
-                    {sub:"Math",         max:50, need:42, note:"Calculus + Matrices = 24 marks"},
-                    {sub:"Chemistry",    max:20, need:16, note:"Acids & Salts easiest to score"},
-                    {sub:"Computer",     max:10, need:9,  note:"MS Office — near free marks"},
-                    {sub:"Environment",  max:10, need:8,  note:"Pollution, ecosystems recall"},
-                  ].map(s=>(
+                  {subjectTargets.map(s=>(
                     <div key={s.sub} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",border:"1px solid #1e293b"}}>
                       <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:2}}>{s.sub} <span style={{color:"#374151",fontWeight:400}}>/{s.max}</span></div>
                       <div style={{fontSize:11,color:"#64748b",marginBottom:6}}>{s.note}</div>
@@ -633,7 +955,6 @@ function App() {
 
           return (
             <div>
-              {/* Summary strip */}
               {valid.length>0 && (
                 <div style={{...C.card,marginBottom:14,padding:"14px 18px"}}>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(90px,1fr))",gap:8}}>
@@ -642,7 +963,7 @@ function App() {
                       {label:"Correct", val:totalC,            color:"#22c55e"},
                       {label:"Wrong",   val:totalW,            color:"#ef4444"},
                       {label:"Skipped", val:totalSk,           color:"#64748b"},
-                      {label:"Best/200",val:best,              color:scoreColor(best)},
+                      {label:"Best/200",val:best,              color:scoreColor(best,userTarget)},
                     ].map(s=>(
                       <div key={s.label} style={{background:"#07090f",borderRadius:8,padding:"10px 12px",border:"1px solid #1e293b",textAlign:"center"}}>
                         <div style={{fontSize:20,fontWeight:700,...C.mono,color:s.color}}>{s.val}</div>
@@ -653,7 +974,6 @@ function App() {
                 </div>
               )}
 
-              {/* Add score button */}
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
                 <div style={{fontSize:12,color:"#475569"}}>
                   {mocks.length===0 ? "Add your first mock test score to start predicting." : `${mocks.length} test(s) recorded.`}
@@ -661,14 +981,9 @@ function App() {
                 <button onClick={()=>setShowF(true)} style={C.btn}>+ Add Score</button>
               </div>
 
-              {/* ──────────────────────────────
-                  ADD SCORE FORM
-                  ────────────────────────────── */}
               {showForm && (
                 <div style={{...C.card,borderColor:"rgba(245,158,11,0.3)",marginBottom:16,padding:"18px 20px"}}>
                   <div style={{fontSize:14,fontWeight:600,color:"#f59e0b",marginBottom:14}}>Add Test Score</div>
-
-                  {/* Name + Date */}
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:14}}>
                     <div>
                       <div style={C.label}>Test Name (optional)</div>
@@ -681,8 +996,6 @@ function App() {
                         onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={C.input}/>
                     </div>
                   </div>
-
-                  {/* Mode toggle */}
                   <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
                     {[
                       {id:"total",   label:"📝 Total Marks"},
@@ -698,7 +1011,6 @@ function App() {
                     ))}
                   </div>
 
-                  {/* ── TOTAL MODE ── */}
                   {mockMode==="total" && (
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:10,marginBottom:14}}>
                       {[
@@ -718,7 +1030,6 @@ function App() {
                     </div>
                   )}
 
-                  {/* ── SUBJECT-WISE MODE ── */}
                   {mockMode==="subject" && (
                     <div style={{marginBottom:14}}>
                       <div style={{fontSize:11,color:"#475569",marginBottom:10}}>Leave blank for subjects not in this test.</div>
@@ -750,7 +1061,6 @@ function App() {
                           </div>
                         ))}
                       </div>
-                      {/* Running total preview */}
                       {(()=>{
                         const filled=SUB_SUBJECTS.filter(s=>form.subs[s.key]!==""&&form.subs[s.key]!==undefined);
                         if (!filled.length) return null;
@@ -761,14 +1071,11 @@ function App() {
                     </div>
                   )}
 
-                  {/* ── CHAPTER-WISE QUIZ MODE ── */}
                   {mockMode==="chapter" && (
                     <div style={{marginBottom:14}}>
                       <div style={{fontSize:11,color:"#475569",marginBottom:12,lineHeight:1.6}}>
                         Select the chapter you practised, enter your marks, and we'll scale it to 200 for the predictor.
                       </div>
-
-                      {/* Chapter dropdown */}
                       <div style={{marginBottom:12}}>
                         <div style={C.label}>Chapter Name *</div>
                         <select value={form.chapterName}
@@ -787,15 +1094,11 @@ function App() {
                           ))}
                         </select>
                       </div>
-
-                      {/* Chapter info banner */}
                       {selectedChapter && (
                         <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:12,color:"#f59e0b"}}>
                           <strong>{selectedChapter.name}</strong> · {selectedChapter.subject} · {selectedChapter.marks} marks in DDCET paper
                         </div>
                       )}
-
-                      {/* Marks entry */}
                       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:10,marginBottom:10}}>
                         <div>
                           <div style={C.label}>Obtained Marks *</div>
@@ -810,36 +1113,19 @@ function App() {
                             onChange={e=>setForm(p=>({...p,chapterMax:e.target.value}))}
                             style={C.input}/>
                         </div>
-                        <div>
-                          <div style={C.label}>Correct Qs</div>
-                          <input type="number" placeholder="—" value={form.correct}
-                            onChange={e=>setForm(p=>({...p,correct:e.target.value}))}
-                            style={{...C.input,color:form.correct?"#22c55e":"#475569"}}/>
-                        </div>
-                        <div>
-                          <div style={C.label}>Wrong Qs</div>
-                          <input type="number" placeholder="—" value={form.wrong}
-                            onChange={e=>setForm(p=>({...p,wrong:e.target.value}))}
-                            style={{...C.input,color:form.wrong?"#ef4444":"#475569"}}/>
-                        </div>
-                        <div>
-                          <div style={C.label}>Unattempted Qs</div>
-                          <input type="number" placeholder="—" value={form.skip}
-                            onChange={e=>setForm(p=>({...p,skip:e.target.value}))}
-                            style={{...C.input,color:form.skip?"#64748b":"#475569"}}/>
-                        </div>
+                        <div><div style={C.label}>Correct Qs</div><input type="number" placeholder="—" value={form.correct} onChange={e=>setForm(p=>({...p,correct:e.target.value}))} style={{...C.input,color:form.correct?"#22c55e":"#475569"}}/></div>
+                        <div><div style={C.label}>Wrong Qs</div><input type="number" placeholder="—" value={form.wrong} onChange={e=>setForm(p=>({...p,wrong:e.target.value}))} style={{...C.input,color:form.wrong?"#ef4444":"#475569"}}/></div>
+                        <div><div style={C.label}>Unattempted Qs</div><input type="number" placeholder="—" value={form.skip} onChange={e=>setForm(p=>({...p,skip:e.target.value}))} style={{...C.input,color:form.skip?"#64748b":"#475569"}}/></div>
                       </div>
-
-                      {/* Live preview */}
                       {form.chapterObtained && form.chapterMax && !isNaN(parseFloat(form.chapterObtained)) && !isNaN(parseFloat(form.chapterMax)) && (
                         <div style={{background:"#07090f",border:"1px solid #1e293b",borderRadius:8,padding:"10px 14px",fontSize:13,...C.mono}}>
                           <span style={{color:"#64748b"}}>Score: </span>
-                          <span style={{color:scoreColor(Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*200)),fontWeight:700}}>
+                          <span style={{color:scoreColor(Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*200),userTarget),fontWeight:700}}>
                             {form.chapterObtained}/{form.chapterMax}
                           </span>
                           <span style={{color:"#475569"}}> = {Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*100)}%</span>
                           <span style={{color:"#64748b"}}> → Scaled: </span>
-                          <span style={{color:scoreColor(Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*200)),fontWeight:700}}>
+                          <span style={{color:scoreColor(Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*200),userTarget),fontWeight:700}}>
                             {Math.round(parseFloat(form.chapterObtained)/parseFloat(form.chapterMax)*200)}/200
                           </span>
                         </div>
@@ -847,9 +1133,8 @@ function App() {
                     </div>
                   )}
 
-                  {/* Total mode preview */}
                   {mockMode==="total" && form.total && form.max && !isNaN(parseFloat(form.total)) && !isNaN(parseFloat(form.max)) && (
-                    <div style={{fontSize:12,...C.mono,color:scoreColor(Math.round(parseFloat(form.total)/parseFloat(form.max)*200)),marginBottom:10,fontWeight:700}}>
+                    <div style={{fontSize:12,...C.mono,color:scoreColor(Math.round(parseFloat(form.total)/parseFloat(form.max)*200),userTarget),marginBottom:10,fontWeight:700}}>
                       = {Math.round(parseFloat(form.total)/parseFloat(form.max)*100)}% · Scaled: {Math.round(parseFloat(form.total)/parseFloat(form.max)*200)}/200
                     </div>
                   )}
@@ -861,7 +1146,6 @@ function App() {
                 </div>
               )}
 
-              {/* ── MOCK TEST LIST ── */}
               {mocks.length===0 && !showForm && (
                 <div style={{textAlign:"center",color:"#374151",padding:"40px 20px",fontSize:14,background:"#0d1117",border:"1px solid #1e293b",borderRadius:12}}>
                   No tests added yet. Click <strong style={{color:"#f59e0b"}}>+ Add Score</strong> above.
@@ -871,7 +1155,7 @@ function App() {
               {mocks.map((m,i)=>{
                 const pct    = Math.round(m.total/m.max*100);
                 const sc200  = Math.round(m.total/m.max*200);
-                const col    = scoreColor(sc200);
+                const col    = scoreColor(sc200,userTarget);
                 const isChap = m.type==="chapter";
                 return (
                   <div key={i} style={{...C.card,marginBottom:8,borderLeft:`3px solid ${col}`}}>
@@ -894,7 +1178,7 @@ function App() {
                         <div style={{fontSize:24,fontWeight:700,color:col,...C.mono}}>{m.total}<span style={{fontSize:12,color:"#475569"}}>/{m.max}</span></div>
                         <div style={{fontSize:11,color:"#475569"}}>{pct}% · Scaled: <span style={{color:col,fontWeight:700}}>{sc200}/200</span></div>
                         <div style={{fontSize:10,padding:"2px 8px",borderRadius:4,background:col+"22",color:col,fontWeight:700,...C.mono,display:"inline-block",marginTop:3}}>
-                          {pct>=87?"Excellent":pct>=75?"Good":pct>=60?"Average":"Needs Work"}
+                          {sc200>=userTarget?"✓ Target Met":pct>=75?"Good":pct>=60?"Average":"Needs Work"}
                         </div>
                       </div>
                     </div>
@@ -909,9 +1193,17 @@ function App() {
             SETTINGS TAB
             ════════════════════════════════════ */}
         {tab==="settings" && (
-          <div>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {/* Change target card */}
+            <div style={{...C.card,borderColor:"rgba(245,158,11,0.25)",padding:"24px"}}>
+              <h3 style={{color:"#f59e0b",fontSize:16,marginBottom:8}}>🎯 Your Target Score</h3>
+              <p style={{color:"#94a3b8",fontSize:13,marginBottom:16,lineHeight:1.6}}>
+                Currently set to <strong style={{color:"#f59e0b",fontFamily:"IBM Plex Mono,monospace"}}>{userTarget}/200</strong>. You can update it anytime — it's saved permanently in your browser.
+              </p>
+              <button onClick={openTargetPopup} style={C.btn}>✏️ Change Target Score</button>
+            </div>
             <div style={{...C.card,borderColor:"rgba(239,68,68,0.3)",padding:"24px"}}>
-              <h3 style={{color:"#fca5a5",fontSize:18,marginBottom:8}}>Danger Zone</h3>
+              <h3 style={{color:"#fca5a5",fontSize:16,marginBottom:8}}>Danger Zone</h3>
               <p style={{color:"#94a3b8",fontSize:13,marginBottom:20,lineHeight:1.6}}>
                 This will permanently delete all your mock test scores and prediction data from this device. This action cannot be undone.
               </p>
@@ -936,7 +1228,6 @@ const STATE_VER  = "v5";
 const K_STATE    = "cq_state_"    + STATE_VER;
 const K_MASTERED = "cq_mastered_" + STATE_VER;
 
-// Wipe all previous versions silently
 ["cq_state_v1","cq_state_v2","cq_state_v3","cq_state_v4",
  "cq_mastered_v1","cq_mastered_v2","cq_mastered_v3","cq_mastered_v4",
  "csvQuiz_inProgressState","csvQuiz_completedQuestionKeys",
@@ -1293,7 +1584,6 @@ function parseAndNormalize(text) {
 function extractKey(v){const m=String(v||"").trim().toUpperCase().match(/[ABCD]/);return m?m[0]:"";}
 function clean(v){return(v||"").toString().trim();}
 
-/* ── Save quiz result to the Predictor dashboard ── */
 function saveScoreToPredictor() {
   if (!ts||!ts.ended) return;
   const s=summary();
@@ -1303,7 +1593,7 @@ function saveScoreToPredictor() {
     name:"Auto-Generated Quiz",
     date:dateStr,
     total:ts.score,
-    max:ts.cap*2,   // max possible score with +2/question
+    max:ts.cap*2,
     correct:s.correct,
     wrong:s.wrong,
     skip:s.skipped,
